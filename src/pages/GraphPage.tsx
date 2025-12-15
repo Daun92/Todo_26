@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { Network, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
+import { Network, Sparkles, Loader2, TrendingUp, Lightbulb, GitBranch } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, Button, Modal } from '@/components/ui';
 import { db } from '@/lib/db';
 import { cn } from '@/lib/utils';
-import type { Goal, Trigger, Insight, ChallengeLog } from '@/types';
+import { hasAPIKey } from '@/lib/claude';
+import { analyzeCausality } from '@/lib/ai-services';
+import type { CausalityAnalysis } from '@/lib/ai-services';
+import type { Goal, Trigger, Insight, ChallengeLog, Journal } from '@/types';
 
 interface GraphNode {
   id: string;
@@ -30,17 +33,32 @@ export function GraphPage() {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // AI Analysis state
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [causalityAnalysis, setCausalityAnalysis] = useState<CausalityAnalysis | null>(null);
+  const [analysisData, setAnalysisData] = useState<{
+    triggers: Trigger[];
+    insights: Insight[];
+    goals: Goal[];
+    journals: Journal[];
+  }>({ triggers: [], insights: [], goals: [], journals: [] });
+
   // Load data and build graph
   useEffect(() => {
     const load = async () => {
       setLoading(true);
 
-      const [goals, triggers, insights, challenges] = await Promise.all([
+      const [goals, triggers, insights, challenges, journals] = await Promise.all([
         db.goals.toArray(),
         db.triggers.toArray(),
         db.insights.toArray(),
         db.challengeLogs.where('status').equals('completed').toArray(),
+        db.journals.toArray(),
       ]);
+
+      // Store data for AI analysis
+      setAnalysisData({ triggers, insights, goals, journals });
 
       const graphNodes: GraphNode[] = [];
       const graphLinks: GraphLink[] = [];
@@ -340,6 +358,180 @@ export function GraphPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* AI Causality Analysis CTA */}
+      {hasAPIKey() && (
+        <Card className="bg-gradient-to-br from-primary-500 to-accent-500 text-white border-none">
+          <CardContent className="py-6 text-center">
+            <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-80" />
+            <h3 className="font-bold mb-1">AI 인과관계 분석</h3>
+            <p className="text-sm text-white/80 mb-4">
+              AI가 당신의 성장 데이터를 분석하여 숨겨진 패턴과 인과관계를 발견합니다
+            </p>
+            <Button
+              variant="secondary"
+              className="bg-white/20 hover:bg-white/30 text-white border-none"
+              onClick={handleAnalyzeCausality}
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  분석 중...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  인과관계 분석
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* AI Analysis Modal */}
+      <Modal
+        isOpen={isAnalysisModalOpen}
+        onClose={() => setIsAnalysisModalOpen(false)}
+        title="AI 인과관계 분석"
+      >
+        {causalityAnalysis && (
+          <div className="space-y-4">
+            {/* Narrative */}
+            <div className="p-4 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-950/30 dark:to-accent-950/30 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary-500" />
+                </div>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{causalityAnalysis.narrative}</p>
+              </div>
+            </div>
+
+            {/* Top Triggers */}
+            {causalityAnalysis.topTriggers.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-amber-500" />
+                  가장 영향력 있는 자극
+                </h4>
+                <div className="space-y-2">
+                  {causalityAnalysis.topTriggers.map((trigger, i) => (
+                    <div
+                      key={i}
+                      className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">{trigger.title}</span>
+                        <span className="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full">
+                          영향도 {trigger.impact}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{trigger.reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Growth Patterns */}
+            {causalityAnalysis.growthPatterns.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  성장 패턴
+                </h4>
+                <ul className="space-y-1">
+                  {causalityAnalysis.growthPatterns.map((pattern, i) => (
+                    <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                      <span className="text-emerald-500 mt-0.5">→</span>
+                      {pattern}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Inflection Points */}
+            {causalityAnalysis.inflectionPoints.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 text-purple-500" />
+                  변곡점 (급성장 시점)
+                </h4>
+                <div className="space-y-2">
+                  {causalityAnalysis.inflectionPoints.map((point, i) => (
+                    <div
+                      key={i}
+                      className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                          {point.date}
+                        </span>
+                      </div>
+                      <p className="text-sm">
+                        <span className="text-slate-500">원인:</span> {point.cause}
+                      </p>
+                      <p className="text-sm">
+                        <span className="text-slate-500">결과:</span> {point.effect}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Correlations */}
+            {causalityAnalysis.correlations.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">숨겨진 상관관계</h4>
+                <div className="space-y-2">
+                  {causalityAnalysis.correlations.map((corr, i) => (
+                    <div
+                      key={i}
+                      className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm">
+                          <span className="font-medium">{corr.factorA}</span>
+                          <span className="text-slate-400 mx-2">↔</span>
+                          <span className="font-medium">{corr.factorB}</span>
+                        </span>
+                        <span className="text-xs px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                          상관도 {Math.round(corr.strength * 100)}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{corr.insight}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button className="w-full" onClick={() => setIsAnalysisModalOpen(false)}>
+              확인
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
+
+  async function handleAnalyzeCausality() {
+    if (!hasAPIKey()) return;
+
+    setIsAnalyzing(true);
+    setIsAnalysisModalOpen(true);
+
+    try {
+      const analysis = await analyzeCausality(analysisData);
+      setCausalityAnalysis(analysis);
+    } catch (error) {
+      console.error('Causality analysis failed:', error);
+      setIsAnalysisModalOpen(false);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
 }

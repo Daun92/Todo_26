@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, BookOpen, Lightbulb, FileText, Target } from 'lucide-react';
+import { Plus, Search, BookOpen, Lightbulb, FileText, Target, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, Button, Modal, Input, Textarea } from '@/components/ui';
 import { db } from '@/lib/db';
 import { cn, formatDate, generateId, getToday } from '@/lib/utils';
-import type { Journal, JournalType } from '@/types';
+import { hasAPIKey } from '@/lib/claude';
+import { analyzeJournal } from '@/lib/ai-services';
+import type { Journal, JournalType, Goal } from '@/types';
 
 const journalTypes: { id: JournalType; label: string; icon: typeof BookOpen; color: string }[] = [
   { id: 'free', label: '자유 메모', icon: FileText, color: 'text-slate-500' },
@@ -12,9 +14,24 @@ const journalTypes: { id: JournalType; label: string; icon: typeof BookOpen; col
   { id: 'goal-note', label: '목표 메모', icon: Target, color: 'text-primary-500' },
 ];
 
-function JournalEntry({ journal }: { journal: Journal }) {
+interface JournalWithAI extends Journal {
+  aiAnalysis?: {
+    mood: 'positive' | 'neutral' | 'challenging';
+    energy: number;
+    keyInsight: string;
+    coachingMessage: string;
+  };
+}
+
+function JournalEntry({ journal }: { journal: JournalWithAI }) {
   const typeInfo = journalTypes.find((t) => t.id === journal.type) || journalTypes[0];
   const Icon = typeInfo.icon;
+
+  const moodColors = {
+    positive: 'text-emerald-500',
+    neutral: 'text-slate-500',
+    challenging: 'text-amber-500',
+  };
 
   return (
     <Card hoverable className="group">
@@ -31,6 +48,12 @@ function JournalEntry({ journal }: { journal: Journal }) {
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
                 {typeInfo.label}
               </span>
+              {journal.aiAnalysis && (
+                <span className={cn('text-xs flex items-center gap-1', moodColors[journal.aiAnalysis.mood])}>
+                  <Sparkles className="w-3 h-3" />
+                  AI 분석
+                </span>
+              )}
             </div>
             {journal.title && (
               <h4 className="font-medium text-sm mb-1">{journal.title}</h4>
@@ -50,6 +73,13 @@ function JournalEntry({ journal }: { journal: Journal }) {
                 ))}
               </div>
             )}
+            {journal.aiAnalysis?.keyInsight && (
+              <div className="mt-3 p-2 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-950/30 dark:to-accent-950/30 rounded-lg">
+                <p className="text-xs text-primary-700 dark:text-primary-300">
+                  <strong>AI 인사이트:</strong> {journal.aiAnalysis.keyInsight}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -58,51 +88,87 @@ function JournalEntry({ journal }: { journal: Journal }) {
 }
 
 export function JournalPage() {
-  const [journals, setJournals] = useState<Journal[]>([]);
+  const [journals, setJournals] = useState<JournalWithAI[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedType, setSelectedType] = useState<JournalType>('free');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
   const [filterType, setFilterType] = useState<JournalType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiCoachMessage, setAiCoachMessage] = useState<string | null>(null);
 
-  const loadJournals = async () => {
+  const loadData = async () => {
     setLoading(true);
-    let query = db.journals.orderBy('date').reverse();
-
-    const data = await query.toArray();
-    setJournals(data);
+    const [journalData, goalData] = await Promise.all([
+      db.journals.orderBy('date').reverse().toArray(),
+      db.goals.toArray(),
+    ]);
+    setJournals(journalData as JournalWithAI[]);
+    setGoals(goalData);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadJournals();
+    loadData();
   }, []);
 
   const handleSave = async () => {
     if (!content.trim()) return;
+    setIsSaving(true);
+    setAiCoachMessage(null);
 
-    const journal: Journal = {
+    let userTags = tags.split(',').map((t) => t.trim()).filter(Boolean);
+    let aiAnalysis: JournalWithAI['aiAnalysis'] | undefined;
+    let linkedGoals: string[] = [];
+
+    // AI 분석 수행 (API 키가 있는 경우)
+    if (hasAPIKey() && content.trim().length > 20) {
+      try {
+        const analysis = await analyzeJournal(content.trim(), goals);
+        aiAnalysis = {
+          mood: analysis.mood,
+          energy: analysis.energy,
+          keyInsight: analysis.keyInsight,
+          coachingMessage: analysis.coachingMessage,
+        };
+        // AI가 제안한 태그 병합
+        userTags = [...new Set([...userTags, ...analysis.suggestedTags])];
+        // 연결된 목표 찾기
+        linkedGoals = goals
+          .filter((g) => analysis.linkedGoals.includes(g.title))
+          .map((g) => g.id);
+        // 코칭 메시지 표시
+        setAiCoachMessage(analysis.coachingMessage);
+      } catch (error) {
+        console.error('AI analysis failed:', error);
+      }
+    }
+
+    const journal: JournalWithAI = {
       id: generateId(),
       type: selectedType,
       title: title.trim() || undefined,
       content: content.trim(),
-      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-      linkedGoals: [],
+      tags: userTags,
+      linkedGoals,
       linkedTriggers: [],
       date: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      aiAnalysis,
     };
 
     await db.journals.add(journal);
-    await loadJournals();
+    await loadData();
 
     setTitle('');
     setContent('');
     setTags('');
+    setIsSaving(false);
     setIsModalOpen(false);
   };
 
@@ -260,16 +326,55 @@ export function JournalPage() {
             onChange={(e) => setTags(e.target.value)}
           />
 
+          {hasAPIKey() && (
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <Sparkles className="w-3 h-3 text-primary-500" />
+              AI가 저널을 분석하여 인사이트와 태그를 제안합니다
+            </div>
+          )}
+
           <div className="flex gap-2 pt-2">
             <Button variant="secondary" className="flex-1" onClick={() => setIsModalOpen(false)}>
               취소
             </Button>
-            <Button className="flex-1" onClick={handleSave} disabled={!content.trim()}>
-              저장
+            <Button className="flex-1" onClick={handleSave} disabled={!content.trim() || isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  AI 분석 중...
+                </>
+              ) : (
+                '저장'
+              )}
             </Button>
           </div>
         </div>
       </Modal>
+
+      {/* AI Coach Message Toast */}
+      {aiCoachMessage && (
+        <div className="fixed bottom-20 left-4 right-4 max-w-lg mx-auto z-50 animate-in slide-in-from-bottom-4">
+          <Card className="bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm mb-1">AI 코치</p>
+                  <p className="text-sm opacity-90">{aiCoachMessage}</p>
+                </div>
+                <button
+                  onClick={() => setAiCoachMessage(null)}
+                  className="text-white/70 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
