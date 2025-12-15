@@ -1,73 +1,211 @@
-# React + TypeScript + Vite
+# Catalyze 26
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> 2026년, 나의 성장을 촉매하는 개인 성장 운영체제
 
-Currently, two official plugins are available:
+**Catalyze 26**은 단순한 목표 추적 앱이 아닙니다. 1년 후 회고 시점에서 "나의 성장을 가장 촉진시킨 자극은 무엇이었는가?", "변화가 가장 활발했던 시점과 계기는?" 같은 깊은 질문에 답할 수 있도록 설계된 **지식 기반 성장 추적 시스템**입니다.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 프로젝트 비전
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+❌ 일반적 앱: "오늘 명상 했다" → 1년 후: "365일 중 280일 함"
+✅ Catalyze 26: "이 책이 → 이 깨달음을 → 이 행동 변화를 → 이 성과를 만들었다"
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 핵심 철학
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **인과관계 추적**: 자극(Trigger) → 인사이트(Insight) → 행동(Action) → 성과(Outcome)
+2. **전략의 진화**: 목표 달성 전략을 버전 관리하여 "왜 바꿨는지" 기록
+3. **온톨로지 기반**: 모든 데이터가 관계로 연결되어 지식 그래프 형성
+4. **회고 중심 설계**: 1년 후 분석 가능한 데이터 구조
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 주요 기능
+
+### 1. 습관 트래커
+매일 실천하는 기본 습관을 관리합니다.
+- 걷기, 자세, 코어, 호흡, 명상
+- GitHub 스타일 히트맵으로 연간 활동 시각화
+- 연속 기록(Streak) 추적
+
+### 2. 챌린지 시스템
+지식 축적을 위한 주기별 챌린지입니다.
+
+| 주기 | 챌린지 |
+|------|--------|
+| **일간** | 기사/리포트 리뷰, 코드 리뷰, 프롬프트 실험, TIL |
+| **주간** | 논문/리포트 딥다이브, 딥다이브 학습 |
+| **월간** | 서적 완독 & 리뷰, 월간 성장 회고 |
+
+각 챌린지 완료 시 제목, 출처, 핵심 인사이트, 적용 계획을 기록합니다.
+
+### 3. 목표 관리
+3가지 핵심 역량 목표를 관리합니다.
+- **AI 프롬프팅 마스터**: 프롬프트 엔지니어링 역량
+- **프로젝트 리드 역량**: 리더십 및 팀 관리
+- **프로젝트 기획/관리**: 체계적 기획 스킬
+
+각 목표에는:
+- **전략 버전 관리**: 전략 변경 시 이유와 함께 히스토리 보존
+- **마일스톤**: 구체적 달성 체크포인트
+- **레벨 평가**: 주기적 셀프 평가 (1-10)
+
+### 4. 저널
+자유로운 기록 공간입니다.
+- **자유 메모**: 형식 없이 자유롭게
+- **자극 기록**: 인사이트를 준 자극 기록
+- **회고**: 일일/주간/월간 돌아보기
+- **목표 메모**: 특정 목표에 연결된 생각
+
+### 5. 인사이트 대시보드
+데이터 기반 성장 분석입니다.
+- 습관 달성 추이 차트
+- 챌린지 완료 통계
+- 역량 레벨 변화 추적
+- 주간/월간 회고 유도
+
+### 6. 성장 그래프 (온톨로지 뷰)
+D3.js 기반 지식 그래프입니다.
+- 목표-자극-인사이트-성과 연결 시각화
+- 노드 간 관계 탐색
+- 성장 패턴 발견
+
+---
+
+## 데이터 모델 (온톨로지)
+
 ```
+[목표 Goal]
+    │
+    ├──develops──→ [역량 Competency]
+    │                   │
+    │                   └──requires──→ [활동 Activity]
+    │
+    └──produces──→ [성과 Achievement]
+
+[자극 Trigger] ──sparks──→ [인사이트 Insight]
+                                │
+                                └──drives──→ [행동 Action]
+                                                │
+                                                └──produces──→ [성과 Outcome]
+```
+
+---
+
+## 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| **프레임워크** | React 18 + TypeScript |
+| **빌드 도구** | Vite |
+| **스타일링** | Tailwind CSS |
+| **상태 관리** | Zustand |
+| **데이터 저장** | Dexie.js (IndexedDB) |
+| **차트** | Recharts |
+| **그래프** | D3.js |
+
+### 왜 이 스택인가?
+
+- **IndexedDB**: 1년치 관계형 데이터를 브라우저에서 오프라인 저장
+- **D3.js**: 온톨로지 기반 지식 그래프 시각화
+- **Zustand**: 미니멀하고 직관적인 상태 관리
+- **TypeScript**: 복잡한 데이터 모델의 타입 안전성
+
+---
+
+## 시작하기
+
+### 설치
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드 미리보기
+npm run preview
+```
+
+### 로컬 개발
+
+```bash
+npm run dev
+```
+
+브라우저에서 `http://localhost:5173` 접속
+
+---
+
+## 프로젝트 구조
+
+```
+src/
+├── components/
+│   ├── home/           # 홈 대시보드 컴포넌트
+│   │   ├── HabitTracker.tsx
+│   │   ├── ChallengeSection.tsx
+│   │   ├── Heatmap.tsx
+│   │   ├── StreakCard.tsx
+│   │   └── WeeklyChallenge.tsx
+│   ├── layout/         # 레이아웃
+│   │   ├── Header.tsx
+│   │   ├── BottomNav.tsx
+│   │   └── Layout.tsx
+│   └── ui/             # 공통 UI 컴포넌트
+│       ├── Button.tsx
+│       ├── Card.tsx
+│       ├── Input.tsx
+│       ├── Modal.tsx
+│       └── Progress.tsx
+├── hooks/              # Custom Hooks
+│   ├── useHabits.ts
+│   ├── useChallenges.ts
+│   └── useGoals.ts
+├── lib/
+│   ├── db.ts           # Dexie.js 데이터베이스
+│   └── utils.ts        # 유틸리티 함수
+├── pages/              # 페이지 컴포넌트
+│   ├── HomePage.tsx
+│   ├── GoalsPage.tsx
+│   ├── JournalPage.tsx
+│   ├── InsightsPage.tsx
+│   └── GraphPage.tsx
+├── stores/
+│   └── useStore.ts     # Zustand 스토어
+├── types/
+│   └── index.ts        # TypeScript 타입 정의
+├── App.tsx
+├── main.tsx
+└── index.css
+```
+
+---
+
+## 회고 시 분석 가능한 질문들
+
+Catalyze 26을 1년간 사용하면 다음 질문에 답할 수 있습니다:
+
+- "나의 성장을 가장 촉진시킨 자극은 무엇이었나?"
+- "어떤 책/강의/대화가 가장 많은 인사이트를 만들었나?"
+- "변화가 가장 활발했던 시점과 그 계기는?"
+- "어떤 습관이 역량 성장과 가장 연관되어 있나?"
+- "전략을 바꾼 시점에서 실제로 성장이 가속되었나?"
+
+---
+
+## 라이선스
+
+MIT License
+
+---
+
+## 기여
+
+이슈와 PR을 환영합니다. 기여하기 전에 `CLAUDE.md`의 개발 가이드를 참고해주세요.
