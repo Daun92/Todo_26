@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart3, TrendingUp, Calendar, Lightbulb, Target, Flame } from 'lucide-react';
+import { BarChart3, TrendingUp, Calendar, Target, Flame, Sparkles, Loader2, X, Star } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -7,15 +7,16 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Modal } from '@/components/ui';
 import { db } from '@/lib/db';
-import { cn, formatDate, getWeekRange, getMonthRange } from '@/lib/utils';
-import { format, eachDayOfInterval, parseISO, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { cn, getWeekRange, getMonthRange } from '@/lib/utils';
+import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import type { Goal, HabitLog, ChallengeLog, Trigger } from '@/types';
+import { hasAPIKey } from '@/lib/claude';
+import { generateWeeklyReview } from '@/lib/ai-services';
+import type { WeeklyReview } from '@/lib/ai-services';
+import type { Goal, HabitLog, ChallengeLog, Trigger, Journal } from '@/types';
 
 export function InsightsPage() {
   const [period, setPeriod] = useState<'week' | 'month'>('week');
@@ -23,21 +24,29 @@ export function InsightsPage() {
   const [challengeLogs, setChallengeLogs] = useState<ChallengeLog[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [journals, setJournals] = useState<Journal[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // AI Review state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isGeneratingReview, setIsGeneratingReview] = useState(false);
+  const [weeklyReview, setWeeklyReview] = useState<WeeklyReview | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [habits, challenges, goalsData, triggersData] = await Promise.all([
+      const [habits, challenges, goalsData, triggersData, journalsData] = await Promise.all([
         db.habitLogs.toArray(),
         db.challengeLogs.toArray(),
         db.goals.toArray(),
         db.triggers.toArray(),
+        db.journals.toArray(),
       ]);
       setHabitLogs(habits);
       setChallengeLogs(challenges);
       setGoals(goalsData);
       setTriggers(triggersData);
+      setJournals(journalsData);
       setLoading(false);
     };
     load();
@@ -284,18 +293,177 @@ export function InsightsPage() {
       {/* Weekly/Monthly Reflection CTA */}
       <Card className="bg-gradient-to-br from-primary-500 to-accent-500 text-white border-none">
         <CardContent className="py-6 text-center">
-          <Calendar className="w-8 h-8 mx-auto mb-2 opacity-80" />
-          <h3 className="font-bold mb-1">
-            {period === 'week' ? '주간' : '월간'} 회고 작성하기
-          </h3>
-          <p className="text-sm text-white/80 mb-4">
-            이번 {period === 'week' ? '주' : '달'}를 돌아보고 다음을 계획하세요
-          </p>
-          <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-none">
-            회고 시작
-          </Button>
+          {hasAPIKey() ? (
+            <>
+              <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-80" />
+              <h3 className="font-bold mb-1">
+                AI {period === 'week' ? '주간' : '월간'} 회고
+              </h3>
+              <p className="text-sm text-white/80 mb-4">
+                AI가 이번 {period === 'week' ? '주' : '달'}의 성과를 분석하고 피드백을 제공합니다
+              </p>
+              <Button
+                variant="secondary"
+                className="bg-white/20 hover:bg-white/30 text-white border-none"
+                onClick={handleGenerateReview}
+                disabled={isGeneratingReview}
+              >
+                {isGeneratingReview ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    분석 중...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-1" />
+                    AI 회고 생성
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Calendar className="w-8 h-8 mx-auto mb-2 opacity-80" />
+              <h3 className="font-bold mb-1">
+                {period === 'week' ? '주간' : '월간'} 회고 작성하기
+              </h3>
+              <p className="text-sm text-white/80 mb-4">
+                이번 {period === 'week' ? '주' : '달'}를 돌아보고 다음을 계획하세요
+              </p>
+              <p className="text-xs text-white/60 mb-2">
+                설정에서 API 키를 등록하면 AI 회고 기능을 사용할 수 있습니다
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
+
+      {/* AI Review Modal */}
+      <Modal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        title={`AI ${period === 'week' ? '주간' : '월간'} 회고`}
+      >
+        {weeklyReview && (
+          <div className="space-y-4">
+            {/* Score */}
+            <div className="text-center p-4 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-950/30 dark:to-accent-950/30 rounded-xl">
+              <div className="flex items-center justify-center gap-1 mb-2">
+                {[...Array(10)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      'w-5 h-5',
+                      i < weeklyReview.overallScore
+                        ? 'text-amber-400 fill-amber-400'
+                        : 'text-slate-300 dark:text-slate-600'
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                종합 점수 <span className="font-bold">{weeklyReview.overallScore}</span>/10
+              </p>
+            </div>
+
+            {/* Highlight */}
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
+              <h4 className="font-medium text-emerald-700 dark:text-emerald-400 mb-1">
+                이번 {period === 'week' ? '주' : '달'} 하이라이트
+              </h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{weeklyReview.highlight}</p>
+            </div>
+
+            {/* Growth Points */}
+            {weeklyReview.growthPoints.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">성장 포인트</h4>
+                <ul className="space-y-1">
+                  {weeklyReview.growthPoints.map((point, i) => (
+                    <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                      <span className="text-emerald-500 mt-0.5">+</span>
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Patterns */}
+            {weeklyReview.patterns.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">발견된 패턴</h4>
+                <ul className="space-y-1">
+                  {weeklyReview.patterns.map((pattern, i) => (
+                    <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                      <span className="text-primary-500 mt-0.5">→</span>
+                      {pattern}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Next Week Suggestions */}
+            {weeklyReview.nextWeekSuggestions.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">다음 {period === 'week' ? '주' : '달'} 제안</h4>
+                <ul className="space-y-1">
+                  {weeklyReview.nextWeekSuggestions.map((suggestion, i) => (
+                    <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                      <span className="text-amber-500 mt-0.5">★</span>
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Encouragement */}
+            <div className="p-4 bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-950/30 dark:to-accent-950/30 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary-500" />
+                </div>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{weeklyReview.encouragement}</p>
+              </div>
+            </div>
+
+            <Button className="w-full" onClick={() => setIsReviewModalOpen(false)}>
+              확인
+            </Button>
+          </div>
+        )}
+      </Modal>
     </div>
   );
+
+  async function handleGenerateReview() {
+    if (!hasAPIKey()) return;
+
+    setIsGeneratingReview(true);
+    setIsReviewModalOpen(true);
+
+    try {
+      const { start, end } = period === 'week' ? getWeekRange() : getMonthRange();
+
+      const periodHabits = habitLogs.filter((l) => l.date >= start && l.date <= end);
+      const periodChallenges = challengeLogs.filter((l) => l.date >= start && l.date <= end);
+      const periodJournals = journals.filter((j) => j.date >= start && j.date <= end);
+
+      const review = await generateWeeklyReview({
+        habitLogs: periodHabits,
+        challengeLogs: periodChallenges,
+        journals: periodJournals,
+        goals,
+      });
+
+      setWeeklyReview(review);
+    } catch (error) {
+      console.error('Failed to generate review:', error);
+      setIsReviewModalOpen(false);
+    } finally {
+      setIsGeneratingReview(false);
+    }
+  }
 }

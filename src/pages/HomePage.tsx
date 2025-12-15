@@ -1,4 +1,4 @@
-import { StreakCard, HabitTracker, ChallengeSection, Heatmap, WeeklyMonthlyChallenge } from '@/components/home';
+import { StreakCard, HabitTracker, ChallengeSection, Heatmap, WeeklyMonthlyChallenge, AICoach } from '@/components/home';
 
 export function HomePage() {
   return (
@@ -8,6 +8,7 @@ export function HomePage() {
       <ChallengeSection />
       <WeeklyMonthlyChallenge />
       <Heatmap />
+      <AICoach />
     </div>
   );
 }

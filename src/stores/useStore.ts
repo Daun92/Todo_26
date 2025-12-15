@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface DiagnosticResult {
+  category: string;
+  totalScore: number;
+  level: number;
+  completedAt: string;
+}
+
 interface AppState {
   // Theme
   darkMode: boolean;
@@ -24,6 +31,12 @@ interface AppState {
   modalData: Record<string, unknown> | null;
   openModal: (modal: string, data?: Record<string, unknown>) => void;
   closeModal: () => void;
+
+  // Onboarding State
+  onboardingCompleted: boolean;
+  diagnosticResults: DiagnosticResult[];
+  completeOnboarding: (results?: DiagnosticResult[]) => void;
+  resetOnboarding: () => void;
 }
 
 export const useStore = create<AppState>()(
@@ -66,11 +79,25 @@ export const useStore = create<AppState>()(
       modalData: null,
       openModal: (modal, data = {}) => set({ activeModal: modal, modalData: data }),
       closeModal: () => set({ activeModal: null, modalData: null }),
+
+      // Onboarding State
+      onboardingCompleted: false,
+      diagnosticResults: [],
+      completeOnboarding: (results) => set({
+        onboardingCompleted: true,
+        diagnosticResults: results || [],
+      }),
+      resetOnboarding: () => set({
+        onboardingCompleted: false,
+        diagnosticResults: [],
+      }),
     }),
     {
       name: 'catalyze-store',
       partialize: (state) => ({
         darkMode: state.darkMode,
+        onboardingCompleted: state.onboardingCompleted,
+        diagnosticResults: state.diagnosticResults,
       }),
     }
   )
