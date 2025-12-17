@@ -4,7 +4,7 @@ import { formatDateKo } from '@/lib/utils';
 import { Button } from '@/components/ui';
 
 export function Header() {
-  const { darkMode, toggleDarkMode } = useStore();
+  const { darkMode, toggleDarkMode, setActiveTab } = useStore();
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
@@ -35,6 +35,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setActiveTab('settings')}
               className="rounded-full p-2"
             >
               <Settings className="w-5 h-5" />
