@@ -227,3 +227,7 @@ export interface GraphEdge {
   type: 'sparks' | 'drives' | 'produces' | 'improves' | 'builds' | 'requires';
   label?: string;
 }
+
+// ==================== Memory System (Re-export) ====================
+
+export * from './memory';

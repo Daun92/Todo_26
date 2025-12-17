@@ -1,12 +1,12 @@
-import { Home, CheckSquare, Target, PenLine, BarChart3 } from 'lucide-react';
+import { Home, CheckSquare, Sparkles, Target, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/stores/useStore';
 
 const navItems = [
   { id: 'home', label: '홈', icon: Home },
   { id: 'habits', label: '습관', icon: CheckSquare },
+  { id: 'memory', label: '기억', icon: Sparkles },
   { id: 'goals', label: '목표', icon: Target },
-  { id: 'journal', label: '저널', icon: PenLine },
   { id: 'insights', label: '분석', icon: BarChart3 },
 ];
 

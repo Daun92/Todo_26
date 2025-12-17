@@ -13,6 +13,9 @@ import type {
   Reflection,
   DailyStats,
   UserStats,
+  Highlight,
+  TimeCapsule,
+  YearSummary,
 } from '@/types';
 
 class CatalyzeDB extends Dexie {
@@ -29,6 +32,10 @@ class CatalyzeDB extends Dexie {
   reflections!: EntityTable<Reflection, 'id'>;
   dailyStats!: EntityTable<DailyStats, 'date'>;
   userStats!: EntityTable<UserStats, 'id'>;
+  // Memory System
+  highlights!: EntityTable<Highlight, 'id'>;
+  timeCapsules!: EntityTable<TimeCapsule, 'id'>;
+  yearSummaries!: EntityTable<YearSummary, 'year'>;
 
   constructor() {
     super('CatalyzeDB');
@@ -62,6 +69,26 @@ class CatalyzeDB extends Dexie {
       reflections: 'id, type, periodStart',
       dailyStats: 'date',
       userStats: 'id',
+    });
+
+    // Version 3: Memory System
+    this.version(3).stores({
+      goals: 'id, category, createdAt',
+      habitDefinitions: 'id, order, active',
+      habitLogs: 'id, date',
+      challengeTemplates: 'id, frequency, order, active',
+      challengeLogs: 'id, templateId, date, status',
+      triggers: 'id, type, date, *linkedGoals',
+      insights: 'id, triggerId, createdAt, *linkedGoals',
+      actions: 'id, insightId, completed, createdAt',
+      outcomes: 'id, actionId, createdAt, *linkedGoals',
+      journals: 'id, type, date, *tags, *linkedGoals',
+      reflections: 'id, type, periodStart',
+      dailyStats: 'date',
+      userStats: 'id',
+      highlights: 'id, type, date, starred, *tags',
+      timeCapsules: 'id, openDate, isOpened, createdAt',
+      yearSummaries: 'year',
     });
   }
 }

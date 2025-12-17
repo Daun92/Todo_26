@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout';
-import { HomePage, HabitsPage, GoalsPage, JournalPage, InsightsPage, GraphPage, SettingsPage } from '@/pages';
+import { HomePage, HabitsPage, GoalsPage, JournalPage, InsightsPage, GraphPage, SettingsPage, MemoryPage } from '@/pages';
 import { DiagnosticFlow } from '@/components/onboarding';
 import { useStore } from '@/stores/useStore';
 import { initializeDefaultData, db } from '@/lib/db';
@@ -15,6 +15,8 @@ function AppContent() {
       return <HabitsPage />;
     case 'goals':
       return <GoalsPage />;
+    case 'memory':
+      return <MemoryPage />;
     case 'journal':
       return <JournalPage />;
     case 'insights':
