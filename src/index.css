@@ -77,3 +77,33 @@ body {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
+
+/* Confetti animation */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti-fall 2s ease-out forwards;
+}
+
+/* Celebration bounce */
+@keyframes celebrate-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.animate-celebrate {
+  animation: celebrate-bounce 0.5s ease-in-out;
+}

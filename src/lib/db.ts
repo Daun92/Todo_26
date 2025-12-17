@@ -12,6 +12,7 @@ import type {
   Journal,
   Reflection,
   DailyStats,
+  UserStats,
 } from '@/types';
 
 class CatalyzeDB extends Dexie {
@@ -27,6 +28,7 @@ class CatalyzeDB extends Dexie {
   journals!: EntityTable<Journal, 'id'>;
   reflections!: EntityTable<Reflection, 'id'>;
   dailyStats!: EntityTable<DailyStats, 'date'>;
+  userStats!: EntityTable<UserStats, 'id'>;
 
   constructor() {
     super('CatalyzeDB');
@@ -44,6 +46,22 @@ class CatalyzeDB extends Dexie {
       journals: 'id, type, date, *tags, *linkedGoals',
       reflections: 'id, type, periodStart',
       dailyStats: 'date',
+    });
+
+    this.version(2).stores({
+      goals: 'id, category, createdAt',
+      habitDefinitions: 'id, order, active',
+      habitLogs: 'id, date',
+      challengeTemplates: 'id, frequency, order, active',
+      challengeLogs: 'id, templateId, date, status',
+      triggers: 'id, type, date, *linkedGoals',
+      insights: 'id, triggerId, createdAt, *linkedGoals',
+      actions: 'id, insightId, completed, createdAt',
+      outcomes: 'id, actionId, createdAt, *linkedGoals',
+      journals: 'id, type, date, *tags, *linkedGoals',
+      reflections: 'id, type, periodStart',
+      dailyStats: 'date',
+      userStats: 'id',
     });
   }
 }

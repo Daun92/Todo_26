@@ -167,6 +167,37 @@ export interface Reflection {
   createdAt: string;
 }
 
+// ==================== Achievement System ====================
+
+export type AchievementCategory = 'streak' | 'milestone' | 'special';
+
+export interface Achievement {
+  id: string;
+  category: AchievementCategory;
+  name: string;
+  description: string;
+  icon: string;
+  condition: {
+    type: 'streak' | 'total' | 'rate' | 'special';
+    value: number;
+    period?: 'day' | 'week' | 'month';
+  };
+}
+
+export interface UserStats {
+  id: string;
+  unlockedAchievements: Array<{
+    achievementId: string;
+    unlockedAt: string;
+  }>;
+  bestStreak: number;
+  totalCompletions: number;
+  streakFreezes: {
+    remaining: number;
+    usedDates: string[];
+  };
+}
+
 // ==================== Stats ====================
 
 export interface DailyStats {
