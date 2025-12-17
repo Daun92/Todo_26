@@ -5,12 +5,18 @@ import { getToday, generateId } from '@/lib/utils';
 
 export function useHabits() {
   const [habits, setHabits] = useState<HabitDefinition[]>([]);
+  const [allHabits, setAllHabits] = useState<HabitDefinition[]>([]);
   const [todayLog, setTodayLog] = useState<HabitLog | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadHabits = useCallback(async () => {
     const defs = await db.habitDefinitions.where('active').equals(1).sortBy('order');
     setHabits(defs);
+  }, []);
+
+  const loadAllHabits = useCallback(async () => {
+    const defs = await db.habitDefinitions.orderBy('order').toArray();
+    setAllHabits(defs);
   }, []);
 
   const loadTodayLog = useCallback(async () => {
@@ -22,14 +28,15 @@ export function useHabits() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([loadHabits(), loadTodayLog()]);
+      await Promise.all([loadHabits(), loadAllHabits(), loadTodayLog()]);
       setLoading(false);
     };
     load();
-  }, [loadHabits, loadTodayLog]);
+  }, [loadHabits, loadAllHabits, loadTodayLog]);
 
   const toggleHabit = useCallback(async (habitId: string) => {
     const today = getToday();
+    const wasCompleted = todayLog?.habits[habitId] || false;
 
     if (todayLog) {
       const newHabits = {
@@ -47,6 +54,8 @@ export function useHabits() {
       await db.habitLogs.add(newLog);
       setTodayLog(newLog);
     }
+
+    return !wasCompleted; // Returns whether the habit is now completed
   }, [todayLog]);
 
   const getCompletedCount = useCallback(() => {
@@ -58,14 +67,78 @@ export function useHabits() {
     return todayLog?.habits[habitId] || false;
   }, [todayLog]);
 
+  // CRUD Operations
+  const addHabit = useCallback(async (habit: Omit<HabitDefinition, 'id' | 'order'>) => {
+    const maxOrder = allHabits.length > 0
+      ? Math.max(...allHabits.map(h => h.order)) + 1
+      : 0;
+
+    const newHabit: HabitDefinition = {
+      ...habit,
+      id: generateId(),
+      order: maxOrder,
+    };
+
+    await db.habitDefinitions.add(newHabit);
+    await Promise.all([loadHabits(), loadAllHabits()]);
+    return newHabit;
+  }, [allHabits, loadHabits, loadAllHabits]);
+
+  const updateHabit = useCallback(async (id: string, updates: Partial<HabitDefinition>) => {
+    await db.habitDefinitions.update(id, updates);
+    await Promise.all([loadHabits(), loadAllHabits()]);
+  }, [loadHabits, loadAllHabits]);
+
+  const deleteHabit = useCallback(async (id: string) => {
+    await db.habitDefinitions.delete(id);
+    await Promise.all([loadHabits(), loadAllHabits()]);
+  }, [loadHabits, loadAllHabits]);
+
+  const reorderHabits = useCallback(async (orderedIds: string[]) => {
+    await db.transaction('rw', db.habitDefinitions, async () => {
+      for (let i = 0; i < orderedIds.length; i++) {
+        await db.habitDefinitions.update(orderedIds[i], { order: i });
+      }
+    });
+    await Promise.all([loadHabits(), loadAllHabits()]);
+  }, [loadHabits, loadAllHabits]);
+
+  // Condition tracking (energy/mood)
+  const updateTodayCondition = useCallback(async (updates: { energy?: number; mood?: number; note?: string }) => {
+    const today = getToday();
+
+    if (todayLog) {
+      await db.habitLogs.update(todayLog.id, updates);
+      setTodayLog({ ...todayLog, ...updates });
+    } else {
+      const newLog: HabitLog = {
+        id: generateId(),
+        date: today,
+        habits: {},
+        ...updates,
+      };
+      await db.habitLogs.add(newLog);
+      setTodayLog(newLog);
+    }
+  }, [todayLog]);
+
   return {
     habits,
+    allHabits,
     todayLog,
     loading,
     toggleHabit,
     getCompletedCount,
     isHabitCompleted,
     totalHabits: habits.length,
+    // CRUD
+    addHabit,
+    updateHabit,
+    deleteHabit,
+    reorderHabits,
+    // Condition
+    updateTodayCondition,
+    refresh: () => Promise.all([loadHabits(), loadAllHabits(), loadTodayLog()]),
   };
 }
 

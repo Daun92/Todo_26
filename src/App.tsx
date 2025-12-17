@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout';
-import { HomePage, GoalsPage, JournalPage, InsightsPage, GraphPage, SettingsPage } from '@/pages';
+import { HomePage, HabitsPage, GoalsPage, JournalPage, InsightsPage, GraphPage, SettingsPage } from '@/pages';
 import { DiagnosticFlow } from '@/components/onboarding';
 import { useStore } from '@/stores/useStore';
 import { initializeDefaultData, db } from '@/lib/db';
@@ -11,6 +11,8 @@ function AppContent() {
   switch (activeTab) {
     case 'home':
       return <HomePage />;
+    case 'habits':
+      return <HabitsPage />;
     case 'goals':
       return <GoalsPage />;
     case 'journal':
