@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { Layout } from '@/components/layout';
 import { ChatPage, FeedPage, ConnectPage, ReflectPage } from '@/pages';
-import { QuickMemoModal } from '@/components/modals/QuickMemoModal';
-import { AddContentModal } from '@/components/modals/AddContentModal';
+import { QuickMemoModal, AddContentModal, SettingsModal } from '@/components/modals';
 import { useStore } from '@/stores/useStore';
 import { initializeUserProfile } from '@/lib/db';
 
@@ -43,6 +42,11 @@ export default function App() {
 
       <AddContentModal
         isOpen={activeModal === 'addContent'}
+        onClose={closeModal}
+      />
+
+      <SettingsModal
+        isOpen={activeModal === 'settings'}
         onClose={closeModal}
       />
     </Layout>
