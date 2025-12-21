@@ -1,3 +1,3 @@
-export * from './Layout';
-export * from './Header';
-export * from './BottomNav';
+export { Header } from './Header';
+export { BottomNav } from './BottomNav';
+export { Layout } from './Layout';

@@ -1,15 +1,13 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from './Button';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  children: ReactNode;
-  className?: string;
-  showCloseButton?: boolean;
+  children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'full';
 }
 
 export function Modal({
@@ -17,20 +15,21 @@ export function Modal({
   onClose,
   title,
   children,
-  className,
-  showCloseButton = true,
+  size = 'md',
 }: ModalProps) {
+  // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
+  // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -44,45 +43,41 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal Content */}
       <div
         className={cn(
-          'relative w-full sm:max-w-lg max-h-[90vh] overflow-auto',
-          'bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl',
-          'shadow-xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300',
-          className
+          'relative z-10 bg-white dark:bg-slate-800 rounded-2xl shadow-xl',
+          'max-h-[90vh] overflow-hidden flex flex-col',
+          size === 'sm' && 'w-full max-w-sm mx-4',
+          size === 'md' && 'w-full max-w-lg mx-4',
+          size === 'lg' && 'w-full max-w-2xl mx-4',
+          size === 'full' && 'w-full h-full max-w-none rounded-none'
         )}
       >
         {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="sticky top-0 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-t-2xl">
-            {title && (
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                {title}
-              </h2>
-            )}
-            {showCloseButton && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="rounded-full p-2 -mr-2"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            )}
+        {title && (
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              {title}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
           </div>
         )}
 
         {/* Body */}
-        <div className="p-4">{children}</div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
     </div>
   );

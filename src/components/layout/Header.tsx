@@ -1,46 +1,55 @@
-import { Moon, Sun, Settings } from 'lucide-react';
+import { Settings, Mic } from 'lucide-react';
 import { useStore } from '@/stores/useStore';
-import { formatDateKo } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 export function Header() {
-  const { darkMode, toggleDarkMode, setActiveTab } = useStore();
+  const { openModal } = useStore();
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
-      <div className="max-w-lg mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-              Catalyze 26
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {formatDateKo(new Date())}
-            </p>
-          </div>
+    <header className="sticky top-0 z-40 glass glass-border">
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          {/* Neural Orb Mini */}
+          <div
+            className={cn(
+              'w-8 h-8 rounded-full',
+              'bg-gradient-to-br from-[var(--accent-cyan)] to-[#0099cc]',
+              'animate-breathe'
+            )}
+            style={{
+              boxShadow: '0 0 15px rgba(0, 212, 255, 0.4)',
+            }}
+          />
+          <span className="text-xl font-bold gradient-text">
+            Mosaic
+          </span>
+        </div>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleDarkMode}
-              className="rounded-full p-2"
-            >
-              {darkMode ? (
-                <Sun className="w-5 h-5 text-amber-500" />
-              ) : (
-                <Moon className="w-5 h-5 text-slate-600" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('settings')}
-              className="rounded-full p-2"
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          {/* Voice Shortcut */}
+          <button
+            className={cn(
+              'p-2 rounded-xl btn-neural-ghost',
+              'text-[var(--text-muted)] hover:text-[var(--accent-cyan)]'
+            )}
+            aria-label="음성 입력"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+
+          {/* Settings */}
+          <button
+            onClick={() => openModal('settings')}
+            className={cn(
+              'p-2 rounded-xl btn-neural-ghost',
+              'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+            )}
+            aria-label="설정"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </header>

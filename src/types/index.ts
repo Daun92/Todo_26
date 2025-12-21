@@ -1,233 +1,161 @@
-// ==================== Core Types ====================
+// ============================================
+// MOSAIC - Type Definitions
+// ============================================
 
-export type GoalCategory = 'competency' | 'habit' | 'lifestyle';
-export type TriggerType = 'book' | 'article' | 'lecture' | 'talk' | 'event' | 'failure' | 'success' | 'code' | 'paper';
-export type JournalType = 'free' | 'trigger' | 'reflection' | 'goal-note';
-export type ChallengeFrequency = 'daily' | 'weekly' | 'monthly';
-export type ChallengeStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
-
-// ==================== Goal System ====================
-
-export interface Strategy {
+// Content (학습 자료)
+export interface Content {
   id: string;
-  version: number;
-  content: string;
-  reason: string;
-  startDate: string;
-  endDate?: string;
-}
-
-export interface Milestone {
-  id: string;
+  type: 'article' | 'note' | 'url' | 'thought';
   title: string;
-  completed: boolean;
-  completedDate?: string;
-  order: number;
+  source?: string;
+  url?: string;
+  body?: string;
+  summary?: string;
+  tags: string[];
+  status: 'queued' | 'learning' | 'completed';
+  counterpoint?: string; // 대척점
+  createdAt: Date;
+  completedAt?: Date;
 }
 
-export interface LevelLog {
-  date: string;
-  level: number;
-  note?: string;
-}
-
-export interface Goal {
+// Interview Session (인터뷰 세션)
+export interface InterviewSession {
   id: string;
-  title: string;
-  description?: string;
-  category: GoalCategory;
-  icon: string;
-  strategies: Strategy[];
-  milestones: Milestone[];
-  currentLevel: number;
-  levelHistory: LevelLog[];
-  linkedTriggers: string[];
-  createdAt: string;
-  updatedAt: string;
+  contentId: string;
+  exchanges: Exchange[];
+  insights: string[];
+  connections: string[]; // Connection IDs
+  createdAt: Date;
+  completedAt?: Date;
 }
 
-// ==================== Habit System ====================
+export interface Exchange {
+  id: string;
+  type: 'question' | 'answer';
+  text: string;
+  timestamp: Date;
+}
 
-export interface HabitDefinition {
+// Memo (메모)
+export interface Memo {
+  id: string;
+  text: string;
+  contentId?: string;
+  sessionId?: string;
+  tags: string[];
+  organized: boolean;
+  createdAt: Date;
+}
+
+// Connection (연결)
+export interface Connection {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  sourceType: 'content' | 'memo' | 'tag';
+  targetType: 'content' | 'memo' | 'tag';
+  relationship: string;
+  strength: number; // 1-10
+  createdAt: Date;
+}
+
+// Tag (태그)
+export interface Tag {
   id: string;
   name: string;
-  icon: string;
-  description?: string;
-  active: boolean;
-  order: number;
+  category: 'topic' | 'emotion' | 'action' | 'custom';
+  count: number;
+  createdAt: Date;
 }
 
-export interface HabitLog {
-  id: string;
-  date: string;
-  habits: Record<string, boolean>;
-  energy?: number;
-  mood?: number;
-  note?: string;
-}
-
-// ==================== Challenge System ====================
-
-export interface ChallengeTemplate {
-  id: string;
-  title: string;
-  description?: string;
-  frequency: ChallengeFrequency;
-  icon: string;
-  linkedGoals: string[];
-  active: boolean;
-  order: number;
-}
-
-export interface ChallengeLog {
-  id: string;
-  templateId: string;
-  date: string;
-  status: ChallengeStatus;
-  title?: string;
-  source?: string;
-  content?: string;
-  insights: string[];
-  linkedGoals: string[];
-  actionPlan?: string;
-  completedAt?: string;
-}
-
-// ==================== Trigger-Insight-Action-Outcome ====================
-
-export interface Trigger {
-  id: string;
-  type: TriggerType;
-  title: string;
-  source?: string;
-  date: string;
-  insights: string[];
-  linkedGoals: string[];
-  challengeLogId?: string;
-}
-
-export interface Insight {
-  id: string;
-  content: string;
-  triggerId: string;
-  actions: string[];
-  linkedGoals: string[];
-  createdAt: string;
-}
-
-export interface Action {
-  id: string;
-  content: string;
-  insightId: string;
-  outcomes: string[];
-  completed: boolean;
-  completedAt?: string;
-  createdAt: string;
-}
-
-export interface Outcome {
-  id: string;
-  content: string;
-  actionId: string;
-  impactLevel: number; // 1-5
-  linkedGoals: string[];
-  createdAt: string;
-}
-
-// ==================== Journal ====================
-
-export interface Journal {
-  id: string;
-  type: JournalType;
-  title?: string;
-  content: string;
-  tags: string[];
-  linkedGoals: string[];
-  linkedTriggers: string[];
-  mood?: number;
-  energy?: number;
-  date: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ==================== Reflection (Weekly/Monthly) ====================
-
+// Reflection (회고)
 export interface Reflection {
   id: string;
-  type: 'daily' | 'weekly' | 'monthly';
-  periodStart: string;
-  periodEnd: string;
-  highlights: string[];
-  challenges: string[];
-  learnings: string[];
-  gratitude: string[];
-  nextPeriodGoals: string[];
-  overallRating: number; // 1-5
-  createdAt: string;
+  type: 'monthly' | 'quarterly' | 'ondemand' | 'triggered';
+  period: {
+    start: Date;
+    end: Date;
+  };
+  report: ReflectionReport;
+  createdAt: Date;
 }
 
-// ==================== Achievement System ====================
+export interface ReflectionReport {
+  stats: LearningStats;
+  patterns: Pattern[];
+  algorithm: AlgorithmInsight;
+  counterpoints: CounterpointBalance;
+  successes: Success[];
+  narrative?: string;
+}
 
-export type AchievementCategory = 'streak' | 'milestone' | 'special';
+export interface LearningStats {
+  contentsRead: number;
+  interviewSessions: number;
+  memosWritten: number;
+  connectionsFound: number;
+}
 
-export interface Achievement {
+export interface Pattern {
   id: string;
-  category: AchievementCategory;
-  name: string;
   description: string;
-  icon: string;
-  condition: {
-    type: 'streak' | 'total' | 'rate' | 'special';
-    value: number;
-    period?: 'day' | 'week' | 'month';
-  };
+  occurrences: number;
+  relatedTags: string[];
 }
 
-export interface UserStats {
+export interface AlgorithmInsight {
+  preferredTopics: string[];
+  learningStyle: string;
+  timePatterns: string;
+}
+
+export interface CounterpointBalance {
+  currentBias: string;
+  recommendations: string[];
+  balanceScore: number; // 0-100
+}
+
+export interface Success {
   id: string;
-  unlockedAchievements: Array<{
-    achievementId: string;
-    unlockedAt: string;
-  }>;
-  bestStreak: number;
-  totalCompletions: number;
-  streakFreezes: {
-    remaining: number;
-    usedDates: string[];
-  };
+  description: string;
+  date: Date;
+  relatedContentIds: string[];
 }
 
-// ==================== Stats ====================
-
-export interface DailyStats {
-  date: string;
-  habitsCompleted: number;
-  habitsTotal: number;
-  challengesCompleted: number;
-  challengesTotal: number;
-  journalEntries: number;
-  triggersRecorded: number;
-  insightsGained: number;
-}
-
-// ==================== Graph Node/Edge for Ontology ====================
-
-export interface GraphNode {
+// User Profile (사용자 프로필)
+export interface UserProfile {
   id: string;
-  type: 'goal' | 'trigger' | 'insight' | 'action' | 'outcome' | 'habit' | 'challenge';
-  label: string;
-  data: Record<string, unknown>;
+  interests: Interest[];
+  learningPatterns: LearningPattern[];
+  biases: Bias[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface GraphEdge {
-  id: string;
-  source: string;
-  target: string;
-  type: 'sparks' | 'drives' | 'produces' | 'improves' | 'builds' | 'requires';
-  label?: string;
+export interface Interest {
+  topic: string;
+  level: number; // 1-10
+  lastAccessed: Date;
 }
 
-// ==================== Memory System (Re-export) ====================
+export interface LearningPattern {
+  type: string;
+  frequency: number;
+  description: string;
+}
 
-export * from './memory';
+export interface Bias {
+  topic: string;
+  direction: 'positive' | 'negative' | 'neutral';
+  strength: number; // 1-10
+}
+
+// App State
+export type TabType = 'chat' | 'feed' | 'graph' | 'growth';
+
+export interface AppState {
+  activeTab: TabType;
+  darkMode: boolean;
+  currentContentId: string | null;
+  currentSessionId: string | null;
+}
