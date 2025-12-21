@@ -1,207 +1,267 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 import type {
-  Goal,
-  HabitDefinition,
-  HabitLog,
-  ChallengeTemplate,
-  ChallengeLog,
-  Trigger,
-  Insight,
-  Action,
-  Outcome,
-  Journal,
+  Content,
+  InterviewSession,
+  Memo,
+  Connection,
+  Tag,
   Reflection,
-  DailyStats,
-  UserStats,
-  Highlight,
-  TimeCapsule,
-  YearSummary,
+  UserProfile,
 } from '@/types';
 
-class CatalyzeDB extends Dexie {
-  goals!: EntityTable<Goal, 'id'>;
-  habitDefinitions!: EntityTable<HabitDefinition, 'id'>;
-  habitLogs!: EntityTable<HabitLog, 'id'>;
-  challengeTemplates!: EntityTable<ChallengeTemplate, 'id'>;
-  challengeLogs!: EntityTable<ChallengeLog, 'id'>;
-  triggers!: EntityTable<Trigger, 'id'>;
-  insights!: EntityTable<Insight, 'id'>;
-  actions!: EntityTable<Action, 'id'>;
-  outcomes!: EntityTable<Outcome, 'id'>;
-  journals!: EntityTable<Journal, 'id'>;
-  reflections!: EntityTable<Reflection, 'id'>;
-  dailyStats!: EntityTable<DailyStats, 'date'>;
-  userStats!: EntityTable<UserStats, 'id'>;
-  // Memory System
-  highlights!: EntityTable<Highlight, 'id'>;
-  timeCapsules!: EntityTable<TimeCapsule, 'id'>;
-  yearSummaries!: EntityTable<YearSummary, 'year'>;
+// ============================================
+// MOSAIC Database
+// ============================================
+
+export class MosaicDB extends Dexie {
+  contents!: Table<Content>;
+  interviews!: Table<InterviewSession>;
+  memos!: Table<Memo>;
+  connections!: Table<Connection>;
+  tags!: Table<Tag>;
+  reflections!: Table<Reflection>;
+  userProfile!: Table<UserProfile>;
 
   constructor() {
-    super('CatalyzeDB');
+    super('MosaicDB');
 
     this.version(1).stores({
-      goals: 'id, category, createdAt',
-      habitDefinitions: 'id, order, active',
-      habitLogs: 'id, date',
-      challengeTemplates: 'id, frequency, order, active',
-      challengeLogs: 'id, templateId, date, status',
-      triggers: 'id, type, date, *linkedGoals',
-      insights: 'id, triggerId, createdAt, *linkedGoals',
-      actions: 'id, insightId, completed, createdAt',
-      outcomes: 'id, actionId, createdAt, *linkedGoals',
-      journals: 'id, type, date, *tags, *linkedGoals',
-      reflections: 'id, type, periodStart',
-      dailyStats: 'date',
-    });
-
-    this.version(2).stores({
-      goals: 'id, category, createdAt',
-      habitDefinitions: 'id, order, active',
-      habitLogs: 'id, date',
-      challengeTemplates: 'id, frequency, order, active',
-      challengeLogs: 'id, templateId, date, status',
-      triggers: 'id, type, date, *linkedGoals',
-      insights: 'id, triggerId, createdAt, *linkedGoals',
-      actions: 'id, insightId, completed, createdAt',
-      outcomes: 'id, actionId, createdAt, *linkedGoals',
-      journals: 'id, type, date, *tags, *linkedGoals',
-      reflections: 'id, type, periodStart',
-      dailyStats: 'date',
-      userStats: 'id',
-    });
-
-    // Version 3: Memory System
-    this.version(3).stores({
-      goals: 'id, category, createdAt',
-      habitDefinitions: 'id, order, active',
-      habitLogs: 'id, date',
-      challengeTemplates: 'id, frequency, order, active',
-      challengeLogs: 'id, templateId, date, status',
-      triggers: 'id, type, date, *linkedGoals',
-      insights: 'id, triggerId, createdAt, *linkedGoals',
-      actions: 'id, insightId, completed, createdAt',
-      outcomes: 'id, actionId, createdAt, *linkedGoals',
-      journals: 'id, type, date, *tags, *linkedGoals',
-      reflections: 'id, type, periodStart',
-      dailyStats: 'date',
-      userStats: 'id',
-      highlights: 'id, type, date, starred, *tags',
-      timeCapsules: 'id, openDate, isOpened, createdAt',
-      yearSummaries: 'year',
+      contents: 'id, type, status, createdAt, *tags',
+      interviews: 'id, contentId, createdAt',
+      memos: 'id, contentId, sessionId, organized, createdAt, *tags',
+      connections: 'id, sourceId, targetId, sourceType, targetType, createdAt',
+      tags: 'id, name, category',
+      reflections: 'id, type, createdAt',
+      userProfile: 'id',
     });
   }
 }
 
-export const db = new CatalyzeDB();
+export const db = new MosaicDB();
 
-// ==================== Initial Data ====================
+// ============================================
+// Database Helpers
+// ============================================
 
-export async function initializeDefaultData() {
-  const goalsCount = await db.goals.count();
-  if (goalsCount > 0) return;
+// Initialize default user profile if not exists
+export async function initializeUserProfile(): Promise<void> {
+  const existing = await db.userProfile.get('default');
+  if (!existing) {
+    await db.userProfile.add({
+      id: 'default',
+      interests: [],
+      learningPatterns: [],
+      biases: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+}
 
-  // Default Goals
-  const defaultGoals: Goal[] = [
-    {
-      id: crypto.randomUUID(),
-      title: 'AI 프롬프팅 마스터',
-      description: 'AI 프롬프트 엔지니어링 역량을 전문가 수준으로 향상',
-      category: 'competency',
-      icon: '🤖',
-      strategies: [{
-        id: crypto.randomUUID(),
-        version: 1,
-        content: '매일 1개 프롬프트 실험 및 기록',
-        reason: '초기 전략',
-        startDate: new Date().toISOString().split('T')[0],
-      }],
-      milestones: [
-        { id: crypto.randomUUID(), title: '기본 프롬프트 패턴 학습', completed: false, order: 0 },
-        { id: crypto.randomUUID(), title: 'Chain of Thought 마스터', completed: false, order: 1 },
-        { id: crypto.randomUUID(), title: 'Few-shot Learning 적용', completed: false, order: 2 },
-      ],
-      currentLevel: 3,
-      levelHistory: [{ date: new Date().toISOString().split('T')[0], level: 3, note: '시작점' }],
-      linkedTriggers: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: crypto.randomUUID(),
-      title: '프로젝트 리드 역량',
-      description: '프로젝트를 효과적으로 이끌고 팀을 관리하는 역량 개발',
-      category: 'competency',
-      icon: '🎖️',
-      strategies: [{
-        id: crypto.randomUUID(),
-        version: 1,
-        content: '주간 리더십 관련 아티클 리뷰 및 실무 적용',
-        reason: '초기 전략',
-        startDate: new Date().toISOString().split('T')[0],
-      }],
-      milestones: [
-        { id: crypto.randomUUID(), title: '효과적인 회의 진행법 학습', completed: false, order: 0 },
-        { id: crypto.randomUUID(), title: '피드백 스킬 향상', completed: false, order: 1 },
-      ],
-      currentLevel: 4,
-      levelHistory: [{ date: new Date().toISOString().split('T')[0], level: 4, note: '시작점' }],
-      linkedTriggers: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: crypto.randomUUID(),
-      title: '프로젝트 기획/관리',
-      description: '체계적인 프로젝트 기획과 관리 스킬 개발',
-      category: 'competency',
-      icon: '📋',
-      strategies: [{
-        id: crypto.randomUUID(),
-        version: 1,
-        content: '실제 프로젝트에 애자일 방법론 적용 및 회고',
-        reason: '초기 전략',
-        startDate: new Date().toISOString().split('T')[0],
-      }],
-      milestones: [
-        { id: crypto.randomUUID(), title: '기획서 템플릿 완성', completed: false, order: 0 },
-        { id: crypto.randomUUID(), title: '리스크 관리 체계 구축', completed: false, order: 1 },
-      ],
-      currentLevel: 3,
-      levelHistory: [{ date: new Date().toISOString().split('T')[0], level: 3, note: '시작점' }],
-      linkedTriggers: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+// Get user profile
+export async function getUserProfile(): Promise<UserProfile | undefined> {
+  return db.userProfile.get('default');
+}
 
-  // Default Habits
-  const defaultHabits: HabitDefinition[] = [
-    { id: 'walking', name: '걷기', icon: '🚶', description: '하루 30분 이상 걷기', active: true, order: 0 },
-    { id: 'posture', name: '자세', icon: '📐', description: '바른 자세 유지하기', active: true, order: 1 },
-    { id: 'core', name: '코어', icon: '💪', description: '코어 운동 10분', active: true, order: 2 },
-    { id: 'breathing', name: '호흡', icon: '🌬️', description: '깊은 호흡 연습', active: true, order: 3 },
-    { id: 'meditation', name: '명상', icon: '🧘', description: '명상 10분', active: true, order: 4 },
-  ];
-
-  // Default Challenge Templates
-  const defaultChallenges: ChallengeTemplate[] = [
-    // Daily
-    { id: 'daily-article', title: '기사/리포트 리뷰', description: 'AI/Tech 관련 기사 1건 읽고 인사이트 정리', frequency: 'daily', icon: '📰', linkedGoals: [], active: true, order: 0 },
-    { id: 'daily-code', title: '코드 리뷰', description: '동료 코드 또는 오픈소스 1건 리뷰', frequency: 'daily', icon: '💻', linkedGoals: [], active: true, order: 1 },
-    { id: 'daily-prompt', title: '프롬프트 실험', description: '새로운 프롬프트 패턴 1개 실험', frequency: 'daily', icon: '🧪', linkedGoals: [], active: true, order: 2 },
-    { id: 'daily-til', title: 'TIL 작성', description: '오늘 배운 것 기록', frequency: 'daily', icon: '📝', linkedGoals: [], active: true, order: 3 },
-    // Weekly
-    { id: 'weekly-paper', title: '논문/리포트 딥다이브', description: '트렌드 관련 논문 또는 심층 리포트 1편 정독', frequency: 'weekly', icon: '📄', linkedGoals: [], active: true, order: 0 },
-    { id: 'weekly-deepdive', title: '딥다이브 학습', description: '한 주제에 대해 깊이 있는 학습', frequency: 'weekly', icon: '🔬', linkedGoals: [], active: true, order: 1 },
-    // Monthly
-    { id: 'monthly-book', title: '서적 완독', description: '전문 서적 1권 완독 및 리뷰', frequency: 'monthly', icon: '📚', linkedGoals: [], active: true, order: 0 },
-    { id: 'monthly-reflection', title: '월간 성장 회고', description: '한 달간의 성장 돌아보기', frequency: 'monthly', icon: '🔮', linkedGoals: [], active: true, order: 1 },
-  ];
-
-  await db.transaction('rw', [db.goals, db.habitDefinitions, db.challengeTemplates], async () => {
-    await db.goals.bulkAdd(defaultGoals);
-    await db.habitDefinitions.bulkAdd(defaultHabits);
-    await db.challengeTemplates.bulkAdd(defaultChallenges);
+// Update user profile
+export async function updateUserProfile(
+  updates: Partial<UserProfile>
+): Promise<void> {
+  await db.userProfile.update('default', {
+    ...updates,
+    updatedAt: new Date(),
   });
+}
+
+// ============================================
+// Content Operations
+// ============================================
+
+export async function addContent(content: Content): Promise<string> {
+  return db.contents.add(content);
+}
+
+export async function getContent(id: string): Promise<Content | undefined> {
+  return db.contents.get(id);
+}
+
+export async function getContentsByStatus(
+  status: Content['status']
+): Promise<Content[]> {
+  return db.contents.where('status').equals(status).toArray();
+}
+
+export async function updateContent(
+  id: string,
+  updates: Partial<Content>
+): Promise<void> {
+  await db.contents.update(id, updates);
+}
+
+export async function deleteContent(id: string): Promise<void> {
+  await db.contents.delete(id);
+}
+
+// ============================================
+// Interview Operations
+// ============================================
+
+export async function addInterview(
+  interview: InterviewSession
+): Promise<string> {
+  return db.interviews.add(interview);
+}
+
+export async function getInterview(
+  id: string
+): Promise<InterviewSession | undefined> {
+  return db.interviews.get(id);
+}
+
+export async function getInterviewsByContent(
+  contentId: string
+): Promise<InterviewSession[]> {
+  return db.interviews.where('contentId').equals(contentId).toArray();
+}
+
+export async function updateInterview(
+  id: string,
+  updates: Partial<InterviewSession>
+): Promise<void> {
+  await db.interviews.update(id, updates);
+}
+
+// ============================================
+// Memo Operations
+// ============================================
+
+export async function addMemo(memo: Memo): Promise<string> {
+  return db.memos.add(memo);
+}
+
+export async function getMemo(id: string): Promise<Memo | undefined> {
+  return db.memos.get(id);
+}
+
+export async function getMemosByContent(contentId: string): Promise<Memo[]> {
+  return db.memos.where('contentId').equals(contentId).toArray();
+}
+
+export async function getUnorganizedMemos(): Promise<Memo[]> {
+  return db.memos.where('organized').equals(0).toArray();
+}
+
+export async function updateMemo(
+  id: string,
+  updates: Partial<Memo>
+): Promise<void> {
+  await db.memos.update(id, updates);
+}
+
+// ============================================
+// Tag Operations
+// ============================================
+
+export async function addTag(tag: Tag): Promise<string> {
+  return db.tags.add(tag);
+}
+
+export async function getTag(id: string): Promise<Tag | undefined> {
+  return db.tags.get(id);
+}
+
+export async function getTagByName(name: string): Promise<Tag | undefined> {
+  return db.tags.where('name').equals(name).first();
+}
+
+export async function getAllTags(): Promise<Tag[]> {
+  return db.tags.toArray();
+}
+
+export async function incrementTagCount(id: string): Promise<void> {
+  const tag = await db.tags.get(id);
+  if (tag) {
+    await db.tags.update(id, { count: tag.count + 1 });
+  }
+}
+
+// ============================================
+// Connection Operations
+// ============================================
+
+export async function addConnection(connection: Connection): Promise<string> {
+  return db.connections.add(connection);
+}
+
+export async function getConnectionsBySource(
+  sourceId: string
+): Promise<Connection[]> {
+  return db.connections.where('sourceId').equals(sourceId).toArray();
+}
+
+export async function getConnectionsByTarget(
+  targetId: string
+): Promise<Connection[]> {
+  return db.connections.where('targetId').equals(targetId).toArray();
+}
+
+export async function getAllConnections(): Promise<Connection[]> {
+  return db.connections.toArray();
+}
+
+// ============================================
+// Reflection Operations
+// ============================================
+
+export async function addReflection(reflection: Reflection): Promise<string> {
+  return db.reflections.add(reflection);
+}
+
+export async function getReflection(
+  id: string
+): Promise<Reflection | undefined> {
+  return db.reflections.get(id);
+}
+
+export async function getReflectionsByType(
+  type: Reflection['type']
+): Promise<Reflection[]> {
+  return db.reflections.where('type').equals(type).toArray();
+}
+
+export async function getAllReflections(): Promise<Reflection[]> {
+  return db.reflections.orderBy('createdAt').reverse().toArray();
+}
+
+// ============================================
+// Statistics
+// ============================================
+
+export async function getStats() {
+  const [contents, interviews, memos, connections] = await Promise.all([
+    db.contents.count(),
+    db.interviews.count(),
+    db.memos.count(),
+    db.connections.count(),
+  ]);
+
+  const completed = await db.contents
+    .where('status')
+    .equals('completed')
+    .count();
+  const queued = await db.contents.where('status').equals('queued').count();
+  const learning = await db.contents
+    .where('status')
+    .equals('learning')
+    .count();
+
+  return {
+    totalContents: contents,
+    completedContents: completed,
+    queuedContents: queued,
+    learningContents: learning,
+    totalInterviews: interviews,
+    totalMemos: memos,
+    totalConnections: connections,
+  };
 }

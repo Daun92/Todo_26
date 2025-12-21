@@ -1,104 +1,64 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isToday, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
 
+// Tailwind class merger
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string, formatStr: string = 'yyyy.MM.dd'): string {
-  const d = typeof date === 'string' ? parseISO(date) : date;
-  return format(d, formatStr, { locale: ko });
-}
-
-export function formatDateKo(date: Date | string): string {
-  const d = typeof date === 'string' ? parseISO(date) : date;
-  return format(d, 'M월 d일 (EEEE)', { locale: ko });
-}
-
-export function getToday(): string {
-  return format(new Date(), 'yyyy-MM-dd');
-}
-
-export function getWeekRange(date: Date = new Date()): { start: string; end: string } {
-  return {
-    start: format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-    end: format(endOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
-  };
-}
-
-export function getMonthRange(date: Date = new Date()): { start: string; end: string } {
-  return {
-    start: format(startOfMonth(date), 'yyyy-MM-dd'),
-    end: format(endOfMonth(date), 'yyyy-MM-dd'),
-  };
-}
-
-export function isTodayDate(date: string): boolean {
-  return isToday(parseISO(date));
-}
-
+// Generate unique ID
 export function generateId(): string {
-  return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-export function calculateStreak(dates: string[]): number {
-  if (dates.length === 0) return 0;
+// Format date
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
 
-  const sortedDates = [...dates].sort().reverse();
-  const today = getToday();
+// Format relative time
+export function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-  let streak = 0;
-  let currentDate = new Date(today);
+  if (diffMins < 1) return '방금 전';
+  if (diffMins < 60) return `${diffMins}분 전`;
+  if (diffHours < 24) return `${diffHours}시간 전`;
+  if (diffDays < 7) return `${diffDays}일 전`;
+  return formatDate(date);
+}
 
-  for (const dateStr of sortedDates) {
-    const date = new Date(dateStr);
-    const diff = Math.floor((currentDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+// Truncate text
+export function truncate(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + '...';
+}
 
-    if (diff === 0 || diff === 1) {
-      streak++;
-      currentDate = date;
-    } else {
-      break;
-    }
+// Extract domain from URL
+export function extractDomain(url: string): string {
+  try {
+    const domain = new URL(url).hostname;
+    return domain.replace('www.', '');
+  } catch {
+    return url;
   }
-
-  return streak;
 }
 
-export function getCompletionRate(completed: number, total: number): number {
-  if (total === 0) return 0;
-  return Math.round((completed / total) * 100);
-}
-
-export function getLevelColor(level: number): string {
-  if (level <= 2) return 'bg-red-500';
-  if (level <= 4) return 'bg-orange-500';
-  if (level <= 6) return 'bg-yellow-500';
-  if (level <= 8) return 'bg-green-500';
-  return 'bg-emerald-500';
-}
-
-export function getHeatmapColor(value: number, max: number): string {
-  if (value === 0) return 'bg-slate-200 dark:bg-slate-800';
-  const intensity = Math.ceil((value / max) * 4);
-  const colors = [
-    'bg-emerald-200 dark:bg-emerald-900',
-    'bg-emerald-300 dark:bg-emerald-700',
-    'bg-emerald-400 dark:bg-emerald-600',
-    'bg-emerald-500 dark:bg-emerald-500',
-  ];
-  return colors[Math.min(intensity - 1, 3)];
-}
-
+// Debounce function
 export function debounce<T extends (...args: unknown[]) => unknown>(
-  func: T,
-  wait: number
+  fn: T,
+  delay: number
 ): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout>;
+  let timeoutId: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
   };
 }

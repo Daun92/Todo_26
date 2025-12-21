@@ -1,8 +1,4 @@
-export * from './HomePage';
-export * from './HabitsPage';
-export * from './GoalsPage';
-export * from './JournalPage';
-export * from './InsightsPage';
-export * from './GraphPage';
-export * from './SettingsPage';
-export * from './MemoryPage';
+export { FeedPage } from './FeedPage';
+export { LearnPage } from './LearnPage';
+export { ConnectPage } from './ConnectPage';
+export { ReflectPage } from './ReflectPage';

@@ -1,103 +1,82 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { TabType } from '@/types';
 
-interface DiagnosticResult {
-  category: string;
-  totalScore: number;
-  level: number;
-  completedAt: string;
-}
+// ============================================
+// App Store
+// ============================================
 
-interface AppState {
+interface AppStore {
+  // Navigation
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
+
   // Theme
   darkMode: boolean;
   toggleDarkMode: () => void;
-  setDarkMode: (value: boolean) => void;
 
-  // Navigation
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  // Current Session
+  currentContentId: string | null;
+  setCurrentContentId: (id: string | null) => void;
 
-  // Selected date for views
-  selectedDate: string;
-  setSelectedDate: (date: string) => void;
+  currentSessionId: string | null;
+  setCurrentSessionId: (id: string | null) => void;
 
-  // UI State
-  isMobileMenuOpen: boolean;
-  setMobileMenuOpen: (open: boolean) => void;
-
-  // Modal State
+  // Modal
   activeModal: string | null;
-  modalData: Record<string, unknown> | null;
-  openModal: (modal: string, data?: Record<string, unknown>) => void;
+  modalData: unknown;
+  openModal: (modal: string, data?: unknown) => void;
   closeModal: () => void;
 
-  // Onboarding State
-  onboardingCompleted: boolean;
-  diagnosticResults: DiagnosticResult[];
-  completeOnboarding: (results?: DiagnosticResult[]) => void;
-  resetOnboarding: () => void;
+  // Quick Memo
+  quickMemoOpen: boolean;
+  setQuickMemoOpen: (open: boolean) => void;
 }
 
-export const useStore = create<AppState>()(
+export const useStore = create<AppStore>()(
   persist(
     (set) => ({
-      // Theme
-      darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
-      toggleDarkMode: () => set((state) => {
-        const newValue = !state.darkMode;
-        if (newValue) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        return { darkMode: newValue };
-      }),
-      setDarkMode: (value) => set(() => {
-        if (value) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        return { darkMode: value };
-      }),
-
       // Navigation
-      activeTab: 'home',
+      activeTab: 'feed',
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      // Selected date
-      selectedDate: new Date().toISOString().split('T')[0],
-      setSelectedDate: (date) => set({ selectedDate: date }),
+      // Theme
+      darkMode: false,
+      toggleDarkMode: () =>
+        set((state) => {
+          const newDarkMode = !state.darkMode;
+          // Apply to document
+          if (newDarkMode) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          return { darkMode: newDarkMode };
+        }),
 
-      // UI State
-      isMobileMenuOpen: false,
-      setMobileMenuOpen: (open) => set({ isMobileMenuOpen: open }),
+      // Current Session
+      currentContentId: null,
+      setCurrentContentId: (id) => set({ currentContentId: id }),
 
-      // Modal State
+      currentSessionId: null,
+      setCurrentSessionId: (id) => set({ currentSessionId: id }),
+
+      // Modal
       activeModal: null,
       modalData: null,
-      openModal: (modal, data = {}) => set({ activeModal: modal, modalData: data }),
+      openModal: (modal, data = null) =>
+        set({ activeModal: modal, modalData: data }),
       closeModal: () => set({ activeModal: null, modalData: null }),
 
-      // Onboarding State
-      onboardingCompleted: false,
-      diagnosticResults: [],
-      completeOnboarding: (results) => set({
-        onboardingCompleted: true,
-        diagnosticResults: results || [],
-      }),
-      resetOnboarding: () => set({
-        onboardingCompleted: false,
-        diagnosticResults: [],
-      }),
+      // Quick Memo
+      quickMemoOpen: false,
+      setQuickMemoOpen: (open) => set({ quickMemoOpen: open }),
     }),
     {
-      name: 'catalyze-store',
+      name: 'mosaic-store',
       partialize: (state) => ({
         darkMode: state.darkMode,
-        onboardingCompleted: state.onboardingCompleted,
-        diagnosticResults: state.diagnosticResults,
+        activeTab: state.activeTab,
       }),
     }
   )
@@ -105,13 +84,15 @@ export const useStore = create<AppState>()(
 
 // Initialize dark mode on load
 if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('catalyze-store');
+  const stored = localStorage.getItem('mosaic-store');
   if (stored) {
-    const { state } = JSON.parse(stored);
-    if (state?.darkMode) {
-      document.documentElement.classList.add('dark');
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.state?.darkMode) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch {
+      // Ignore parse errors
     }
-  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.classList.add('dark');
   }
 }

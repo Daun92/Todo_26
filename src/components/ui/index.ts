@@ -1,7 +1,6 @@
-export * from './Button';
-export * from './Card';
-export * from './DatePicker';
-export * from './EmptyState';
-export * from './Input';
-export * from './Modal';
-export * from './Progress';
+export { Button } from './Button';
+export { Card, CardHeader, CardContent, CardFooter } from './Card';
+export { Input, Textarea } from './Input';
+export { Modal } from './Modal';
+export { Badge } from './Badge';
+export { EmptyState } from './EmptyState';
