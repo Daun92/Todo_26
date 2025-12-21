@@ -1,7 +1,48 @@
-// Hooks will be added as features are implemented
-// Example exports:
-// export { useContents } from './useContents';
+/**
+ * @file hooks/index.ts
+ * @description 커스텀 훅 모음
+ *
+ * @checkpoint CP-1.1, CP-1.2
+ * @created 2025-12-21
+ */
+
+// ============================================
+// Phase 1: Feed 관련 훅
+// ============================================
+
+export {
+  useContents,
+  useContent,
+  useLearningQueue,
+  type CreateContentInput,
+  type ContentFilter,
+  type ContentSort,
+  type UseContentsReturn,
+} from './useContents';
+
+export {
+  useTags,
+  initializePresetTags,
+  PRESET_TAGS,
+  type CreateTagInput,
+  type UseTagsReturn,
+} from './useTags';
+
+// ============================================
+// Phase 2: Learn 관련 훅 (예정)
+// ============================================
+
 // export { useInterviews } from './useInterviews';
 // export { useMemos } from './useMemos';
+
+// ============================================
+// Phase 3: Connect 관련 훅 (예정)
+// ============================================
+
 // export { useConnections } from './useConnections';
+
+// ============================================
+// Phase 4: Reflect 관련 훅 (예정)
+// ============================================
+
 // export { useReflections } from './useReflections';
