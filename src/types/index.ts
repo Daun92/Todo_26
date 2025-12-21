@@ -151,7 +151,7 @@ export interface Bias {
 }
 
 // App State
-export type TabType = 'feed' | 'learn' | 'connect' | 'reflect';
+export type TabType = 'chat' | 'feed' | 'graph' | 'growth';
 
 export interface AppState {
   activeTab: TabType;

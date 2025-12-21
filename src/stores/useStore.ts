@@ -37,7 +37,7 @@ export const useStore = create<AppStore>()(
   persist(
     (set) => ({
       // Navigation
-      activeTab: 'feed',
+      activeTab: 'chat',
       setActiveTab: (tab) => set({ activeTab: tab }),
 
       // Theme

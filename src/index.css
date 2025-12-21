@@ -1,10 +1,81 @@
 @import 'tailwindcss';
 
 /* ============================================
-   MOSAIC - Global Styles
+   MOSAIC - Neural Design System
+   SF 차세대 AI 파트너 테마
    ============================================ */
 
-/* Custom scrollbar */
+/* ============================================
+   CSS Custom Properties
+   ============================================ */
+:root {
+  /* Background - Deep Space */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a25;
+  --bg-elevated: #22222f;
+
+  /* Text */
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b0;
+  --text-muted: #606070;
+
+  /* Accent - Neon */
+  --accent-cyan: #00d4ff;
+  --accent-magenta: #ff00aa;
+  --accent-amber: #ffaa00;
+  --accent-green: #00ff88;
+
+  /* RGB values for opacity */
+  --accent-cyan-rgb: 0, 212, 255;
+  --accent-magenta-rgb: 255, 0, 170;
+  --accent-amber-rgb: 255, 170, 0;
+  --accent-green-rgb: 0, 255, 136;
+
+  /* Glow Effects */
+  --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.5);
+  --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.5);
+  --glow-amber: 0 0 20px rgba(255, 170, 0, 0.5);
+  --glow-green: 0 0 20px rgba(0, 255, 136, 0.5);
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Border Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+html {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-y: scroll;
+}
+
+body {
+  font-family: 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Scrollbar - Minimal Neural Style
+   ============================================ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -15,77 +86,213 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--bg-elevated);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(var(--accent-cyan-rgb), 0.3);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-/* Focus ring */
-*:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
-}
-
-/* Selection */
+/* ============================================
+   Selection
+   ============================================ */
 ::selection {
-  background-color: #c7d2fe;
-  color: #3730a3;
+  background-color: rgba(var(--accent-cyan-rgb), 0.3);
+  color: var(--text-primary);
 }
 
-.dark ::selection {
-  background-color: #4338ca;
-  color: #e0e7ff;
+/* ============================================
+   Focus Ring - Neon Glow
+   ============================================ */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-cyan), var(--glow-cyan);
 }
 
-/* Smooth transitions for theme change */
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* ============================================
+   Neural Card Style
+   ============================================ */
+.neural-card {
+  background: rgba(18, 18, 26, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
 }
 
-/* Prevent layout shift when scrollbar appears */
-html {
-  overflow-y: scroll;
+.neural-card:hover {
+  border-color: rgba(var(--accent-cyan-rgb), 0.3);
+  box-shadow: 0 0 30px rgba(var(--accent-cyan-rgb), 0.1);
 }
 
-/* Mobile tap highlight */
-@media (hover: none) {
-  * {
-    -webkit-tap-highlight-color: transparent;
+/* ============================================
+   Neural Button Styles
+   ============================================ */
+.btn-neural-primary {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, #0099cc 100%);
+  color: var(--bg-primary);
+  font-weight: 600;
+  box-shadow: var(--glow-cyan);
+  transition: all var(--transition-normal);
+}
+
+.btn-neural-primary:hover {
+  box-shadow: 0 0 30px rgba(var(--accent-cyan-rgb), 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-neural-secondary {
+  background: transparent;
+  border: 1px solid rgba(var(--accent-cyan-rgb), 0.5);
+  color: var(--accent-cyan);
+  transition: all var(--transition-normal);
+}
+
+.btn-neural-secondary:hover {
+  background: rgba(var(--accent-cyan-rgb), 0.1);
+  border-color: var(--accent-cyan);
+}
+
+.btn-neural-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all var(--transition-normal);
+}
+
+.btn-neural-ghost:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   Message Bubbles
+   ============================================ */
+.message-ai {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border: 1px solid rgba(var(--accent-cyan-rgb), 0.2);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--space-xs);
+  box-shadow: 0 0 20px rgba(var(--accent-cyan-rgb), 0.1);
+}
+
+.message-user {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-elevated) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--space-xs) var(--radius-lg);
+}
+
+/* ============================================
+   AI Orb Animations
+   ============================================ */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
   }
-}
-
-/* Safe area for mobile */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* Animation utilities */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
+  50% {
+    transform: scale(1.05);
     opacity: 1;
   }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(var(--accent-cyan-rgb), 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(var(--accent-cyan-rgb), 0.6);
+  }
+}
+
+@keyframes speaking {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(var(--accent-cyan-rgb), 0.4);
+  }
+  25% {
+    transform: scale(1.03);
+    box-shadow: 0 0 35px rgba(var(--accent-cyan-rgb), 0.6);
+  }
+  50% {
+    transform: scale(0.98);
+    box-shadow: 0 0 25px rgba(var(--accent-cyan-rgb), 0.5);
+  }
+  75% {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(var(--accent-cyan-rgb), 0.55);
+  }
+}
+
+@keyframes listening {
+  0%, 100% {
+    border-color: rgba(var(--accent-cyan-rgb), 0.3);
+  }
+  50% {
+    border-color: rgba(var(--accent-cyan-rgb), 0.8);
+  }
+}
+
+@keyframes thinking {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(var(--float-x, 5px), var(--float-y, -5px)) scale(1.2);
+    opacity: 1;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-speaking {
+  animation: speaking 0.8s ease-in-out infinite;
+}
+
+.animate-listening {
+  animation: listening 1s ease-in-out infinite;
+}
+
+.animate-thinking {
+  animation: thinking 3s linear infinite;
+}
+
+/* ============================================
+   Voice Waveform
+   ============================================ */
+.waveform-bar {
+  background: linear-gradient(to top, var(--accent-cyan), rgba(var(--accent-cyan-rgb), 0.3));
+  border-radius: 2px;
+  transition: height 100ms ease;
+}
+
+/* ============================================
+   Page Transitions
+   ============================================ */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -116,10 +323,91 @@ html {
   animation: scale-in 0.2s ease-out;
 }
 
-/* Gradient text */
+/* ============================================
+   Gradient Text
+   ============================================ */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-magenta) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.gradient-text-growth {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   Glass Effect
+   ============================================ */
+.glass {
+  background: rgba(18, 18, 26, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   Noise Texture Overlay
+   ============================================ */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   Safe Area for Mobile
+   ============================================ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ============================================
+   Mobile Tap Highlight
+   ============================================ */
+@media (hover: none) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.5);
+}
+
+.text-glow-magenta {
+  text-shadow: 0 0 10px rgba(var(--accent-magenta-rgb), 0.5);
+}
+
+.border-glow-cyan {
+  box-shadow: 0 0 10px rgba(var(--accent-cyan-rgb), 0.3);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

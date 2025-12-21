@@ -1,4 +1,4 @@
-import { Compass, BookOpen, GitBranch, BarChart3 } from 'lucide-react';
+import { MessageCircle, Compass, GitBranch, TrendingUp } from 'lucide-react';
 import { useStore } from '@/stores/useStore';
 import { cn } from '@/lib/utils';
 import type { TabType } from '@/types';
@@ -6,21 +6,21 @@ import type { TabType } from '@/types';
 interface NavItem {
   id: TabType;
   label: string;
-  icon: typeof Compass;
+  icon: typeof MessageCircle;
 }
 
 const navItems: NavItem[] = [
+  { id: 'chat', label: 'Chat', icon: MessageCircle },
   { id: 'feed', label: 'Feed', icon: Compass },
-  { id: 'learn', label: 'Learn', icon: BookOpen },
-  { id: 'connect', label: 'Connect', icon: GitBranch },
-  { id: 'reflect', label: 'Reflect', icon: BarChart3 },
+  { id: 'graph', label: 'Graph', icon: GitBranch },
+  { id: 'growth', label: 'Growth', icon: TrendingUp },
 ];
 
 export function BottomNav() {
   const { activeTab, setActiveTab } = useStore();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-700">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 glass glass-border pb-safe">
       <div className="flex items-center justify-around py-2 px-4 max-w-lg mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -31,21 +31,34 @@ export function BottomNav() {
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={cn(
-                'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all',
+                'relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200',
                 isActive
-                  ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  ? 'text-[var(--accent-cyan)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
               )}
             >
               <div
                 className={cn(
-                  'p-1.5 rounded-lg transition-colors',
-                  isActive && 'bg-indigo-100 dark:bg-indigo-900/50'
+                  'p-2 rounded-xl transition-all duration-200',
+                  isActive && 'bg-[rgba(0,212,255,0.1)] shadow-[0_0_10px_rgba(0,212,255,0.2)]'
                 )}
               >
                 <Icon className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className={cn(
+                'text-xs font-medium',
+                isActive && 'text-glow-cyan'
+              )}>
+                {item.label}
+              </span>
+
+              {/* Active Indicator */}
+              {isActive && (
+                <div
+                  className="absolute -bottom-0.5 w-8 h-0.5 rounded-full bg-[var(--accent-cyan)]"
+                  style={{ boxShadow: 'var(--glow-cyan)' }}
+                />
+              )}
             </button>
           );
         })}

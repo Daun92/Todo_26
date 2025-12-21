@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Layout } from '@/components/layout';
-import { FeedPage, LearnPage, ConnectPage, ReflectPage } from '@/pages';
+import { ChatPage, FeedPage, ConnectPage, ReflectPage } from '@/pages';
 import { QuickMemoModal } from '@/components/modals/QuickMemoModal';
 import { AddContentModal } from '@/components/modals/AddContentModal';
 import { useStore } from '@/stores/useStore';
@@ -10,16 +10,16 @@ function AppContent() {
   const { activeTab } = useStore();
 
   switch (activeTab) {
+    case 'chat':
+      return <ChatPage />;
     case 'feed':
       return <FeedPage />;
-    case 'learn':
-      return <LearnPage />;
-    case 'connect':
+    case 'graph':
       return <ConnectPage />;
-    case 'reflect':
+    case 'growth':
       return <ReflectPage />;
     default:
-      return <FeedPage />;
+      return <ChatPage />;
   }
 }
 
