@@ -52,10 +52,22 @@ export {
 } from './useMemos';
 
 // ============================================
-// Phase 3: Connect 관련 훅 (예정)
+// Phase 3: Connect 관련 훅
 // ============================================
 
-// export { useConnections } from './useConnections';
+export {
+  useConnections,
+  CONNECTION_TYPES,
+  type ConnectionType,
+  type GraphNode,
+  type GraphLink,
+  type GraphData,
+  type DiscoveredPattern,
+  type CreateConnectionInput,
+  type SuggestedConnection,
+  type ConnectionStats,
+  type UseConnectionsReturn,
+} from './useConnections';
 
 // ============================================
 // Phase 4: Reflect 관련 훅 (예정)

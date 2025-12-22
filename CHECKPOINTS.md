@@ -479,3 +479,212 @@ src/
 ---
 
 *Phase 2 완료: 2025-12-22*
+
+---
+
+## 📋 Phase 3: Connect (연결) 개발 기록
+
+### CP-3.0: Phase 3 개발 시작 (2025-12-22) ✅
+
+#### 현재 상태
+- ✅ Phase 2 완료 및 빌드 검증
+- ✅ Connect 탭 기본 UI 존재
+- ✅ D3.js 의존성 설치 완료
+
+---
+
+### CP-3.1: useConnections 훅 ✅
+
+#### 파일
+`src/hooks/useConnections.ts`
+
+#### 구현된 기능
+- ✅ 기본 CRUD (addConnection, updateConnection, deleteConnection)
+- ✅ 그래프 데이터 생성 (GraphNode, GraphLink)
+- ✅ 노드 데이터 통합 (콘텐츠, 메모, 태그)
+- ✅ 패턴 분석 (analyzePatterns)
+- ✅ 연결 제안 (suggestConnections)
+- ✅ 통계 (totalConnections, avgStrength, mostConnectedNode)
+- ✅ Dexie Live Query 실시간 동기화
+
+#### 타입 정의
+```typescript
+interface GraphNode {
+  id: string;
+  type: 'content' | 'memo' | 'tag';
+  label: string;
+  group: number;
+  size: number;
+  data?: Content | Memo | Tag;
+}
+
+interface GraphLink {
+  source: string;
+  target: string;
+  relationship: string;
+  strength: number;
+}
+
+interface DiscoveredPattern {
+  type: 'tag-cluster' | 'content-chain' | 'topic-bridge' | 'repeat-connection';
+  name: string;
+  description: string;
+  nodes: string[];
+  confidence: number;
+}
+```
+
+---
+
+### CP-3.2: KnowledgeGraph 컴포넌트 ✅
+
+#### 파일
+`src/components/connect/KnowledgeGraph.tsx`
+
+#### 구현된 기능
+- ✅ D3.js Force-directed 그래프 레이아웃
+- ✅ 노드 드래그 인터랙션
+- ✅ 줌/팬 지원 (scaleExtent 0.3~3)
+- ✅ 노드 유형별 스타일링 (콘텐츠/메모/태그)
+- ✅ 연결 강도 시각화 (선 두께)
+- ✅ 노드 클릭/선택 핸들러
+- ✅ 컨트롤 버튼 (줌인/아웃/리셋/새로고침)
+- ✅ 범례 표시
+- ✅ 통계 표시 (노드/연결 수)
+- ✅ 빈 상태 처리
+
+#### 기술적 구현
+- SimNode, SimLink 타입 확장
+- d3.forceSimulation 기반 물리 시뮬레이션
+- d3.zoom, d3.drag 인터랙션
+- ResizeObserver 반응형 처리
+
+---
+
+### CP-3.3: ConnectionCard 컴포넌트 ✅
+
+#### 파일
+`src/components/connect/ConnectionCard.tsx`
+
+#### 구현된 기능
+- ✅ 연결 관계 표시 (source → target)
+- ✅ 관계 유형 라벨
+- ✅ 연결 강도 인디케이터 (1~10)
+- ✅ 수정/삭제 액션 버튼
+- ✅ 노드 유형별 아이콘
+- ✅ 컴팩트/풀 모드
+- ✅ 날짜 표시
+
+---
+
+### CP-3.4: PatternList 컴포넌트 ✅
+
+#### 파일
+`src/components/connect/PatternList.tsx`
+
+#### 구현된 기능
+- ✅ 발견된 패턴 목록 표시
+- ✅ 4가지 패턴 유형 (tag-cluster, content-chain, topic-bridge, repeat-connection)
+- ✅ 신뢰도 표시
+- ✅ 연관 노드 카운트
+- ✅ AI 분석 요청 버튼
+- ✅ 로딩 상태
+- ✅ 빈 상태 처리
+
+---
+
+### CP-3.5: ConnectPage 완성 ✅
+
+#### 파일
+`src/pages/ConnectPage.tsx`
+
+#### 구현된 기능
+- ✅ 헤더 및 연결 추가 버튼
+- ✅ 통계 카드 (연결 수, 평균 강도, 패턴 수)
+- ✅ 지식 그래프 섹션 (그래프/목록 뷰 전환)
+- ✅ 연결 목록 표시
+- ✅ 패턴 분석 섹션
+- ✅ 태그 클라우드 (인터랙티브)
+- ✅ 크로스 인사이트 카드 (핵심 연결점)
+- ✅ 선택된 노드 상세 정보 패널
+- ✅ 훅 연동 (useConnections, useTags)
+
+---
+
+### CP-3.6: 테스트 및 빌드 검증 ✅
+
+#### 빌드 결과
+```
+✓ 2324 modules transformed.
+dist/index.html                   0.72 kB │ gzip:   0.48 kB
+dist/assets/index-YDCcajKW.css   59.73 kB │ gzip:  10.16 kB
+dist/assets/index-CF96UK4q.js   496.68 kB │ gzip: 156.15 kB
+✓ built in 9.33s
+```
+
+#### 해결된 이슈
+- SimLink 인터페이스 `Omit<GraphLink, 'source' | 'target'>` 적용
+- d3.forceCollide 제네릭 타입 `<SimNode>` 명시
+- linkLabel 좌표 계산 괄호 수정
+- Button variant `default` → `primary` 수정
+
+---
+
+## 📁 Phase 3 생성/수정 파일 목록
+
+### 새로 생성된 파일
+```
+src/
+├── hooks/
+│   └── useConnections.ts     # 연결 관리 및 그래프 데이터 훅
+├── components/connect/
+│   ├── KnowledgeGraph.tsx    # D3.js 지식 그래프
+│   ├── ConnectionCard.tsx    # 연결 카드
+│   ├── PatternList.tsx       # 패턴 목록
+│   └── index.ts              # 컴포넌트 export
+```
+
+### 수정된 파일
+```
+src/
+├── hooks/index.ts             # Phase 3 훅 export 추가
+└── pages/ConnectPage.tsx      # 완성
+```
+
+---
+
+## 🔄 업데이트 히스토리
+
+| 날짜 | 체크포인트 | 작업 내용 |
+|------|-----------|----------|
+| 2025-12-22 | CP-3.0 | Phase 3 개발 시작 |
+| 2025-12-22 | CP-3.1 | useConnections 훅 개발 완료 |
+| 2025-12-22 | CP-3.2 | KnowledgeGraph 컴포넌트 완료 |
+| 2025-12-22 | CP-3.3 | ConnectionCard 컴포넌트 완료 |
+| 2025-12-22 | CP-3.4 | PatternList 컴포넌트 완료 |
+| 2025-12-22 | CP-3.5 | ConnectPage 완성 |
+| 2025-12-22 | CP-3.6 | 빌드 검증 통과 |
+
+---
+
+## 🚀 Phase 3 완료 상태
+
+### 완료된 기능
+- ✅ 지식 그래프 시각화 (D3.js)
+- ✅ 연결 CRUD
+- ✅ 노드 드래그/줌/팬 인터랙션
+- ✅ 패턴 분석 UI
+- ✅ 태그 클라우드
+- ✅ 크로스 인사이트 표시
+- ✅ 그래프/목록 뷰 전환
+
+### 향후 개선 사항 (Phase 4+)
+- AI 기반 패턴 자동 분석
+- 연결 추가 모달 구현
+- 노드 상세 모달/페이지
+- 그래프 레이아웃 저장
+- 연결 자동 제안 기능 활성화
+
+---
+
+*Phase 3 완료: 2025-12-22*
