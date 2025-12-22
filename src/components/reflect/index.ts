@@ -2,7 +2,7 @@
  * @file reflect/index.ts
  * @description Reflect (회고) 컴포넌트 모음
  *
- * @checkpoint CP-4.2, CP-4.3, CP-4.4, CP-4.5
+ * @checkpoint CP-4.2, CP-4.3, CP-4.4, CP-4.5, CP-5.4
  * @created 2025-12-22
  */
 
@@ -34,3 +34,6 @@ export {
   ReflectionList,
   ReflectionDetailModal,
 } from './ReflectionReport';
+
+// AI Growth Story
+export { AIGrowthStory } from './AIGrowthStory';

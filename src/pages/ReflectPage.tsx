@@ -29,6 +29,7 @@ import {
   AlgorithmCard,
   ReflectionList,
   ReflectionDetailModal,
+  AIGrowthStory,
 } from '@/components/reflect';
 import { useReflections, type CreateReflectionInput } from '@/hooks';
 import { useStore } from '@/stores/useStore';
@@ -191,8 +192,13 @@ export function ReflectPage() {
 
       {viewMode === 'algorithm' && <AlgorithmContent hasEnoughData={hasEnoughData} />}
 
-      {/* Growth Story Teaser */}
-      <GrowthStoryTeaser hasEnoughData={hasEnoughData} />
+      {/* AI Growth Story */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+          AI 성장 스토리
+        </h2>
+        <AIGrowthStory />
+      </section>
 
       {/* New Reflection Modal */}
       <NewReflectionModal
@@ -394,43 +400,6 @@ function AlgorithmContent({ hasEnoughData }: AlgorithmContentProps) {
         <TopicPieChart height={250} />
       </section>
     </div>
-  );
-}
-
-// ============================================
-// Growth Story Teaser
-// ============================================
-
-interface GrowthStoryTeaserProps {
-  hasEnoughData: boolean;
-}
-
-function GrowthStoryTeaser({ hasEnoughData }: GrowthStoryTeaserProps) {
-  return (
-    <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
-      <CardContent>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0">
-            <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
-              성장 스토리
-            </p>
-            <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
-              {hasEnoughData
-                ? 'AI가 당신의 성장 여정을 스토리로 만들어드릴 준비가 됐어요!'
-                : '충분한 학습 데이터가 쌓이면 AI가 당신의 성장 여정을 스토리로 만들어드려요.'}
-            </p>
-            {hasEnoughData && (
-              <Button variant="ghost" size="sm" className="mt-2 -ml-2">
-                스토리 생성하기
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

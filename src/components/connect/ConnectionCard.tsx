@@ -72,9 +72,6 @@ export function ConnectionCard({
     color: 'gray',
   };
 
-  const TypeIcon = getTypeIcon(connection.sourceType);
-  const TargetIcon = getTypeIcon(connection.targetType);
-
   // ----------------------------------------
   // Compact Render
   // ----------------------------------------
@@ -90,7 +87,7 @@ export function ConnectionCard({
           className
         )}
       >
-        <TypeIcon className="w-4 h-4 text-[var(--text-muted)]" />
+        <TypeIconComponent type={connection.sourceType} className="w-4 h-4 text-[var(--text-muted)]" />
         <span className="text-sm text-[var(--text-primary)] truncate flex-1">
           {sourceLabel}
         </span>
@@ -188,7 +185,7 @@ export function ConnectionCard({
                 'bg-[var(--accent-cyan)]/10'
               )}
             >
-              <TypeIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
+              <TypeIconComponent type={connection.sourceType} className="w-4 h-4 text-[var(--accent-cyan)]" />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -236,7 +233,7 @@ export function ConnectionCard({
                 'bg-[var(--accent-amber)]/10'
               )}
             >
-              <TargetIcon className="w-4 h-4 text-[var(--accent-amber)]" />
+              <TypeIconComponent type={connection.targetType} className="w-4 h-4 text-[var(--accent-amber)]" />
             </div>
           </div>
         </div>
@@ -285,16 +282,22 @@ function StrengthIndicator({ strength, size = 'md' }: StrengthIndicatorProps) {
 // Utilities
 // ============================================
 
-function getTypeIcon(type: Connection['sourceType']) {
+// Type icon component to avoid creating components during render
+interface TypeIconProps {
+  type: Connection['sourceType'];
+  className?: string;
+}
+
+function TypeIconComponent({ type, className }: TypeIconProps) {
   switch (type) {
     case 'content':
-      return BookOpen;
+      return <BookOpen className={className} />;
     case 'memo':
-      return StickyNote;
+      return <StickyNote className={className} />;
     case 'tag':
-      return Tag;
+      return <Tag className={className} />;
     default:
-      return Link2;
+      return <Link2 className={className} />;
   }
 }
 
