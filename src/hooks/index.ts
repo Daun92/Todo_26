@@ -29,11 +29,27 @@ export {
 } from './useTags';
 
 // ============================================
-// Phase 2: Learn 관련 훅 (예정)
+// Phase 2: Learn 관련 훅
 // ============================================
 
-// export { useInterviews } from './useInterviews';
-// export { useMemos } from './useMemos';
+export {
+  useInterview,
+  useInterviewHistory,
+  useRecentInterviews,
+  type InterviewState,
+  type StartSessionInput,
+  type UseInterviewReturn,
+} from './useInterview';
+
+export {
+  useMemos,
+  useMemosByContent,
+  useMemosBySession,
+  useUnorganizedMemos,
+  type CreateMemoInput,
+  type MemoFilter,
+  type UseMemosReturn,
+} from './useMemos';
 
 // ============================================
 // Phase 3: Connect 관련 훅 (예정)
