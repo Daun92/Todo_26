@@ -23,7 +23,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { Button, EmptyState } from '@/components/ui';
-import { KnowledgeGraph, ConnectionCard, PatternList } from '@/components/connect';
+import { KnowledgeGraph, ConnectionCard, PatternList, AIPatternAnalysis } from '@/components/connect';
 import { useConnections, useTags } from '@/hooks';
 import { useStore } from '@/stores/useStore';
 import { cn } from '@/lib/utils';
@@ -226,6 +226,11 @@ export function ConnectPage() {
           onAnalyzeRequest={handleAnalyze}
           loading={isAnalyzing}
         />
+      </section>
+
+      {/* AI 패턴 분석 */}
+      <section>
+        <AIPatternAnalysis />
       </section>
 
       {/* 태그 클라우드 */}

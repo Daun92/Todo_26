@@ -86,3 +86,12 @@ export {
   type LearningStreak,
   type UseReflectionsReturn,
 } from './useReflections';
+
+// ============================================
+// AI 관련 훅
+// ============================================
+
+export {
+  useAIInterview,
+  type UseAIInterviewReturn,
+} from './useAIInterview';

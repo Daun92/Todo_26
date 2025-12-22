@@ -27,9 +27,13 @@ import {
   FileText,
   MessageSquare,
   Link as LinkIcon,
+  Sparkles,
+  Scale,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
+import { useAI } from '@/lib/ai-service';
 import type { Content } from '@/types';
 
 // ============================================
@@ -42,7 +46,9 @@ export interface FeedCardProps {
   onEdit?: (content: Content) => void;
   onDelete?: (id: string) => void;
   onClick?: (content: Content) => void;
+  onUpdateContent?: (id: string, updates: Partial<Content>) => void;
   showActions?: boolean;
+  showAIActions?: boolean;
   compact?: boolean;
 }
 
@@ -94,10 +100,14 @@ export function FeedCard({
   onEdit,
   onDelete,
   onClick,
+  onUpdateContent,
   showActions = true,
+  showAIActions = true,
   compact = false,
 }: FeedCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState<'summary' | 'counterpoint' | null>(null);
+  const { isConfigured, summarize, generateCounterpoint } = useAI();
 
   const statusConfig = STATUS_CONFIG[content.status];
   const StatusIcon = statusConfig.icon;
@@ -136,6 +146,36 @@ export function FeedCard({
   // 외부 클릭 시 메뉴 닫기
   const handleBlur = () => {
     setTimeout(() => setMenuOpen(false), 150);
+  };
+
+  // AI 요약 생성
+  const handleGenerateSummary = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isConfigured || aiGenerating) return;
+    setAiGenerating('summary');
+    try {
+      const result = await summarize(content);
+      if (result) {
+        onUpdateContent?.(content.id, { summary: result.summary });
+      }
+    } finally {
+      setAiGenerating(null);
+    }
+  };
+
+  // AI 대척점 생성
+  const handleGenerateCounterpoint = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isConfigured || aiGenerating) return;
+    setAiGenerating('counterpoint');
+    try {
+      const result = await generateCounterpoint(content);
+      if (result) {
+        onUpdateContent?.(content.id, { counterpoint: result.counterpoint });
+      }
+    } finally {
+      setAiGenerating(null);
+    }
   };
 
   // ----------------------------------------
@@ -354,11 +394,55 @@ export function FeedCard({
         </div>
       )}
 
-      {/* 하단: 날짜 + 학습 시작 버튼 */}
+      {/* 하단: 날짜 + AI 버튼 + 학습 시작 버튼 */}
       <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)]">
-        <span className="text-xs text-[var(--text-muted)]">
-          {formatDate(content.createdAt)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[var(--text-muted)]">
+            {formatDate(content.createdAt)}
+          </span>
+
+          {/* AI 액션 버튼 */}
+          {showAIActions && isConfigured && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {!content.summary && (
+                <button
+                  onClick={handleGenerateSummary}
+                  disabled={!!aiGenerating}
+                  className={cn(
+                    'p-1 rounded transition-colors',
+                    'text-indigo-500 hover:bg-indigo-500/10',
+                    'disabled:opacity-50'
+                  )}
+                  title="AI 요약 생성"
+                >
+                  {aiGenerating === 'summary' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+              {!content.counterpoint && (
+                <button
+                  onClick={handleGenerateCounterpoint}
+                  disabled={!!aiGenerating}
+                  className={cn(
+                    'p-1 rounded transition-colors',
+                    'text-purple-500 hover:bg-purple-500/10',
+                    'disabled:opacity-50'
+                  )}
+                  title="AI 대척점 생성"
+                >
+                  {aiGenerating === 'counterpoint' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Scale className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* 학습 시작 버튼 (대기 상태일 때만) */}
         {content.status === 'queued' && onStartLearning && (
