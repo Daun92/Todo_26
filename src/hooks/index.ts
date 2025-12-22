@@ -70,7 +70,19 @@ export {
 } from './useConnections';
 
 // ============================================
-// Phase 4: Reflect 관련 훅 (예정)
+// Phase 4: Reflect 관련 훅
 // ============================================
 
-// export { useReflections } from './useReflections';
+export {
+  useReflections,
+  useGrowthStats,
+  useAlgorithmAnalysis,
+  useGrowthTimeline,
+  type CreateReflectionInput,
+  type GrowthTimelineItem,
+  type DailyStats,
+  type WeeklyStats,
+  type TopicDistribution,
+  type LearningStreak,
+  type UseReflectionsReturn,
+} from './useReflections';
