@@ -9,5 +9,6 @@
 export { FeedCard, type FeedCardProps } from './FeedCard';
 export { FeedList, type FeedListProps } from './FeedList';
 export { LearningQueue, type LearningQueueProps } from './LearningQueue';
+export { SortableQueueItem } from './SortableQueueItem';
 export { TagSelector, type TagSelectorProps } from './TagSelector';
 export { AISummaryCard, AIQuickActions } from './AISummaryCard';

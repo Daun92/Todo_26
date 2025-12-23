@@ -10,4 +10,21 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core
+          'vendor-react': ['react', 'react-dom'],
+          // State management & database
+          'vendor-data': ['zustand', 'dexie', 'dexie-react-hooks'],
+          // Visualization libraries (large)
+          'vendor-d3': ['d3'],
+          'vendor-charts': ['recharts'],
+          // Drag and drop
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+        },
+      },
+    },
+  },
 })

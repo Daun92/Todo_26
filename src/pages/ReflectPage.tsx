@@ -496,3 +496,5 @@ function NewReflectionModal({ isOpen, onClose, onSelect, isCreating }: NewReflec
     </Modal>
   );
 }
+
+export default ReflectPage;
