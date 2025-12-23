@@ -314,3 +314,5 @@ function AIPartnerCard() {
     </div>
   );
 }
+
+export default FeedPage;

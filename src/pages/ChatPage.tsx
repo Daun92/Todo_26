@@ -425,3 +425,5 @@ function VoiceWaveform() {
     </div>
   );
 }
+
+export default ChatPage;

@@ -2,21 +2,37 @@
  * @file LearningQueue.tsx
  * @description 학습 대기열 컴포넌트 - 학습할 콘텐츠 큐 표시
  *
- * @checkpoint CP-1.5
+ * @checkpoint CP-1.5, CP-6.2
  * @created 2025-12-21
- * @updated 2025-12-21
+ * @updated 2025-12-23
  *
  * @features
  * - 대기열 콘텐츠 목록
  * - 빠른 학습 시작 버튼
  * - 수평 스크롤 (컴팩트 모드)
- * - 드래그앤드롭 순서 변경 (TODO: 향후 구현)
+ * - 드래그앤드롭 순서 변경
  */
 
 import { useMemo } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { Play, ChevronRight, Clock, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FeedCard } from './FeedCard';
+import { SortableQueueItem } from './SortableQueueItem';
 import type { Content } from '@/types';
 
 // ============================================
@@ -28,9 +44,11 @@ export interface LearningQueueProps {
   loading?: boolean;
   onStartLearning: (id: string) => void;
   onContentClick?: (content: Content) => void;
+  onReorder?: (orderedIds: string[]) => void;
   compact?: boolean;
   maxItems?: number;
   showHeader?: boolean;
+  enableDragDrop?: boolean;
 }
 
 // ============================================
@@ -42,9 +60,11 @@ export function LearningQueue({
   loading = false,
   onStartLearning,
   onContentClick,
+  onReorder,
   compact = true,
   maxItems = 5,
   showHeader = true,
+  enableDragDrop = true,
 }: LearningQueueProps) {
   // 표시할 항목
   const displayItems = useMemo(() => {
@@ -52,6 +72,30 @@ export function LearningQueue({
   }, [queue, maxItems]);
 
   const remainingCount = queue.length - maxItems;
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id && onReorder) {
+      const oldIndex = queue.findIndex((q) => q.id === active.id);
+      const newIndex = queue.findIndex((q) => q.id === over.id);
+      const newOrder = arrayMove(queue, oldIndex, newIndex);
+      onReorder(newOrder.map((q) => q.id));
+    }
+  };
 
   // ----------------------------------------
   // Render: Empty State
@@ -104,7 +148,7 @@ export function LearningQueue({
   }
 
   // ----------------------------------------
-  // Render: Compact Mode (Horizontal Scroll)
+  // Render: Compact Mode (Horizontal Scroll - No Drag)
   // ----------------------------------------
 
   if (compact) {
@@ -183,50 +227,20 @@ export function LearningQueue({
   }
 
   // ----------------------------------------
-  // Render: Full Mode (Vertical List)
+  // Render: Full Mode (Vertical List with Drag & Drop)
   // ----------------------------------------
 
-  return (
-    <div className="space-y-3">
-      {/* Header */}
-      {showHeader && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--accent-cyan)]" />
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">
-              학습 대기열
-            </h3>
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded-full text-xs font-medium',
-                'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]'
-              )}
-            >
-              {queue.length}개
-            </span>
-          </div>
-
-          {/* 다음 학습 시작 버튼 */}
-          {queue.length > 0 && (
-            <button
-              onClick={() => onStartLearning(queue[0].id)}
-              className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg font-medium',
-                'bg-[var(--accent-cyan)] text-[var(--bg-primary)]',
-                'hover:bg-[var(--accent-cyan)]/90',
-                'transition-colors'
-              )}
-            >
-              <Play className="w-4 h-4" />
-              다음 학습 시작
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Vertical List */}
-      <div className="space-y-2">
-        {displayItems.map((content, index) => (
+  const renderList = () => (
+    <div className="space-y-2">
+      {displayItems.map((content, index) => (
+        enableDragDrop && onReorder ? (
+          <SortableQueueItem
+            key={content.id}
+            content={content}
+            onStartLearning={onStartLearning}
+            onContentClick={onContentClick}
+          />
+        ) : (
           <div key={content.id} className="flex items-center gap-3">
             {/* 순서 번호 */}
             <div
@@ -249,24 +263,87 @@ export function LearningQueue({
               />
             </div>
           </div>
-        ))}
+        )
+      ))}
 
-        {/* 더보기 */}
-        {remainingCount > 0 && (
-          <button
-            className={cn(
-              'w-full flex items-center justify-center gap-2 py-3 rounded-lg',
-              'border border-dashed border-[var(--border-subtle)]',
-              'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
-              'hover:border-[var(--border-default)]',
-              'transition-colors'
+      {/* 더보기 */}
+      {remainingCount > 0 && (
+        <button
+          className={cn(
+            'w-full flex items-center justify-center gap-2 py-3 rounded-lg',
+            'border border-dashed border-[var(--border-subtle)]',
+            'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+            'hover:border-[var(--border-default)]',
+            'transition-colors'
+          )}
+        >
+          <span>나머지 {remainingCount}개 더보기</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      {/* Header */}
+      {showHeader && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--accent-cyan)]" />
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">
+              학습 대기열
+            </h3>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-xs font-medium',
+                'bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]'
+              )}
+            >
+              {queue.length}개
+            </span>
+            {enableDragDrop && onReorder && (
+              <span className="text-xs text-[var(--text-muted)]">
+                (드래그하여 순서 변경)
+              </span>
             )}
+          </div>
+
+          {/* 다음 학습 시작 버튼 */}
+          {queue.length > 0 && (
+            <button
+              onClick={() => onStartLearning(queue[0].id)}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-lg font-medium',
+                'bg-[var(--accent-cyan)] text-[var(--bg-primary)]',
+                'hover:bg-[var(--accent-cyan)]/90',
+                'transition-colors'
+              )}
+            >
+              <Play className="w-4 h-4" />
+              다음 학습 시작
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* List with optional DnD */}
+      {enableDragDrop && onReorder ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={displayItems.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <span>나머지 {remainingCount}개 더보기</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+            {renderList()}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        renderList()
+      )}
     </div>
   );
 }

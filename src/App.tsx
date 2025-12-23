@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { Layout } from '@/components/layout';
-import { ChatPage, FeedPage, ConnectPage, ReflectPage } from '@/pages';
+import { ToastContainer, PageSkeleton } from '@/components/ui';
 import {
   QuickMemoModal,
   AddContentModal,
@@ -11,21 +11,35 @@ import { useStore } from '@/stores/useStore';
 import { useContents } from '@/hooks';
 import { initializeUserProfile } from '@/lib/db';
 
+// Lazy load page components for code splitting
+const ChatPage = lazy(() => import('@/pages/ChatPage'));
+const FeedPage = lazy(() => import('@/pages/FeedPage'));
+const ConnectPage = lazy(() => import('@/pages/ConnectPage'));
+const ReflectPage = lazy(() => import('@/pages/ReflectPage'));
+
 function AppContent() {
   const { activeTab } = useStore();
 
-  switch (activeTab) {
-    case 'chat':
-      return <ChatPage />;
-    case 'feed':
-      return <FeedPage />;
-    case 'graph':
-      return <ConnectPage />;
-    case 'growth':
-      return <ReflectPage />;
-    default:
-      return <ChatPage />;
-  }
+  const renderPage = () => {
+    switch (activeTab) {
+      case 'chat':
+        return <ChatPage />;
+      case 'feed':
+        return <FeedPage />;
+      case 'graph':
+        return <ConnectPage />;
+      case 'growth':
+        return <ReflectPage />;
+      default:
+        return <ChatPage />;
+    }
+  };
+
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      {renderPage()}
+    </Suspense>
+  );
 }
 
 export default function App() {
@@ -94,6 +108,8 @@ export default function App() {
         onStartLearning={handleStartLearning}
         onDelete={handleDeleteContent}
       />
+      {/* Toast Notifications */}
+      <ToastContainer />
     </Layout>
   );
 }
