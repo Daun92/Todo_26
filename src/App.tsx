@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { Layout } from '@/components/layout';
 import { ToastContainer, PageSkeleton } from '@/components/ui';
+import { InstallPrompt, OfflineIndicator } from '@/components/pwa';
 import {
   QuickMemoModal,
   AddContentModal,
@@ -110,6 +111,10 @@ export default function App() {
       />
       {/* Toast Notifications */}
       <ToastContainer />
+
+      {/* PWA Components */}
+      <OfflineIndicator />
+      <InstallPrompt />
     </Layout>
   );
 }

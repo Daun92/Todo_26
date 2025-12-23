@@ -97,3 +97,9 @@ export {
 } from './useAIInterview';
 
 export { useAI, type UseAIReturn } from '@/lib/ai-service';
+
+// ============================================
+// PWA 관련 훅
+// ============================================
+
+export { usePWA } from './usePWA';
