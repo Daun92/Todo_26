@@ -14,6 +14,7 @@ export interface Content {
   tags: string[];
   status: 'queued' | 'learning' | 'completed';
   counterpoint?: string; // 대척점
+  queueOrder?: number; // 학습 큐에서의 순서
   createdAt: Date;
   completedAt?: Date;
 }

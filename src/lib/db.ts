@@ -186,6 +186,88 @@ export async function incrementTagCount(id: string): Promise<void> {
 }
 
 // ============================================
+// Tag Cascade Operations
+// ============================================
+
+/**
+ * 특정 태그를 포함한 콘텐츠 조회
+ */
+export async function getContentsByTag(tagId: string): Promise<Content[]> {
+  return db.contents.filter((c) => c.tags.includes(tagId)).toArray();
+}
+
+/**
+ * 특정 태그를 포함한 메모 조회
+ */
+export async function getMemosByTag(tagId: string): Promise<Memo[]> {
+  return db.memos.filter((m) => m.tags.includes(tagId)).toArray();
+}
+
+/**
+ * 모든 콘텐츠에서 특정 태그 제거
+ */
+export async function removeTagFromContents(tagId: string): Promise<number> {
+  const contents = await getContentsByTag(tagId);
+  await Promise.all(
+    contents.map((c) =>
+      db.contents.update(c.id, {
+        tags: c.tags.filter((t) => t !== tagId),
+      })
+    )
+  );
+  return contents.length;
+}
+
+/**
+ * 모든 메모에서 특정 태그 제거
+ */
+export async function removeTagFromMemos(tagId: string): Promise<number> {
+  const memos = await getMemosByTag(tagId);
+  await Promise.all(
+    memos.map((m) =>
+      db.memos.update(m.id, {
+        tags: m.tags.filter((t) => t !== tagId),
+      })
+    )
+  );
+  return memos.length;
+}
+
+/**
+ * 태그와 관련된 연결 삭제
+ */
+export async function removeConnectionsByTag(tagId: string): Promise<number> {
+  const connections = await db.connections
+    .filter(
+      (c) =>
+        (c.sourceType === 'tag' && c.sourceId === tagId) ||
+        (c.targetType === 'tag' && c.targetId === tagId)
+    )
+    .toArray();
+
+  await Promise.all(connections.map((c) => db.connections.delete(c.id)));
+  return connections.length;
+}
+
+/**
+ * 태그 삭제 (연쇄 처리 포함)
+ * @returns 영향받은 항목 수
+ */
+export async function deleteTagWithCascade(
+  tagId: string
+): Promise<{ contents: number; memos: number; connections: number }> {
+  const [contents, memos, connections] = await Promise.all([
+    removeTagFromContents(tagId),
+    removeTagFromMemos(tagId),
+    removeConnectionsByTag(tagId),
+  ]);
+
+  await db.tags.delete(tagId);
+
+  return { contents, memos, connections };
+}
+
+// ============================================
 // Connection Operations
 // ============================================
 

@@ -1,8 +1,14 @@
 import { useEffect } from 'react';
 import { Layout } from '@/components/layout';
 import { ChatPage, FeedPage, ConnectPage, ReflectPage } from '@/pages';
-import { QuickMemoModal, AddContentModal, SettingsModal } from '@/components/modals';
+import {
+  QuickMemoModal,
+  AddContentModal,
+  SettingsModal,
+  ContentDetailModal,
+} from '@/components/modals';
 import { useStore } from '@/stores/useStore';
+import { useContents } from '@/hooks';
 import { initializeUserProfile } from '@/lib/db';
 
 function AppContent() {
@@ -23,12 +29,43 @@ function AppContent() {
 }
 
 export default function App() {
-  const { quickMemoOpen, setQuickMemoOpen, activeModal, closeModal } = useStore();
+  const {
+    quickMemoOpen,
+    setQuickMemoOpen,
+    activeModal,
+    modalData,
+    closeModal,
+    currentContentId,
+    setCurrentContentId,
+    setActiveTab,
+  } = useStore();
+
+  const { startLearning, deleteContent } = useContents();
 
   // Initialize database on mount
   useEffect(() => {
     initializeUserProfile();
   }, []);
+
+  // Handler for starting learning from modal
+  const handleStartLearning = async (id: string) => {
+    await startLearning(id);
+    setCurrentContentId(id);
+    setActiveTab('chat');
+    closeModal();
+  };
+
+  // Handler for editing content
+  const handleEditContent = () => {
+    // Switch to addContent modal with edit data
+    // modalData should contain the content to edit
+  };
+
+  // Handler for deleting content
+  const handleDeleteContent = async (id: string) => {
+    await deleteContent(id);
+    closeModal();
+  };
 
   return (
     <Layout>
@@ -48,6 +85,14 @@ export default function App() {
       <SettingsModal
         isOpen={activeModal === 'settings'}
         onClose={closeModal}
+      />
+
+      <ContentDetailModal
+        isOpen={activeModal === 'contentDetail'}
+        onClose={closeModal}
+        contentId={(modalData as { contentId?: string })?.contentId || currentContentId}
+        onStartLearning={handleStartLearning}
+        onDelete={handleDeleteContent}
       />
     </Layout>
   );

@@ -66,7 +66,7 @@ export function FeedPage() {
 
   const handleContentClick = (content: { id: string }) => {
     setCurrentContentId(content.id);
-    // TODO(CP-1.8): 콘텐츠 상세 모달 또는 페이지로 이동
+    openModal('contentDetail', { contentId: content.id });
   };
 
   const handleDelete = async (id: string) => {

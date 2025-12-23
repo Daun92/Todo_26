@@ -83,6 +83,8 @@ export interface UseContentsReturn {
   // 대기열
   queue: Content[];
   queueCount: number;
+  reorderQueue: (orderedIds: string[]) => Promise<void>;
+  removeFromQueue: (id: string) => Promise<void>;
 
   // 필터링 & 정렬
   filter: ContentFilter;
@@ -194,11 +196,20 @@ export function useContents(initialFilter?: ContentFilter): UseContentsReturn {
     return filtered;
   }, [allContents, filter, sort]);
 
-  // 학습 대기열 (queued 상태만)
-  const queue = useMemo(
-    () => allContents?.filter((c) => c.status === 'queued') || [],
-    [allContents]
-  );
+  // 학습 대기열 (queued 상태만, queueOrder로 정렬)
+  const queue = useMemo(() => {
+    const queued = allContents?.filter((c) => c.status === 'queued') || [];
+    return queued.sort((a, b) => {
+      // queueOrder가 있는 항목이 먼저 오고, 그 중에서는 순서대로
+      // queueOrder가 없는 항목은 createdAt 순
+      if (a.queueOrder !== undefined && b.queueOrder !== undefined) {
+        return a.queueOrder - b.queueOrder;
+      }
+      if (a.queueOrder !== undefined) return -1;
+      if (b.queueOrder !== undefined) return 1;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+  }, [allContents]);
 
   // 통계
   const stats = useMemo(() => {
@@ -347,6 +358,43 @@ export function useContents(initialFilter?: ContentFilter): UseContentsReturn {
     [updateStatus]
   );
 
+  /**
+   * 학습 대기열 순서 변경
+   * @param orderedIds 순서대로 정렬된 콘텐츠 ID 배열
+   */
+  const reorderQueue = useCallback(
+    async (orderedIds: string[]): Promise<void> => {
+      try {
+        await Promise.all(
+          orderedIds.map((id, index) =>
+            db.contents.update(id, { queueOrder: index })
+          )
+        );
+        setError(null);
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      }
+    },
+    []
+  );
+
+  /**
+   * 대기열에서 제거 (queueOrder 초기화)
+   */
+  const removeFromQueue = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        await db.contents.update(id, { queueOrder: undefined });
+        setError(null);
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      }
+    },
+    []
+  );
+
   // ----------------------------------------
   // Refresh
   // ----------------------------------------
@@ -382,6 +430,8 @@ export function useContents(initialFilter?: ContentFilter): UseContentsReturn {
     // 대기열
     queue,
     queueCount: queue.length,
+    reorderQueue,
+    removeFromQueue,
 
     // 필터링 & 정렬
     filter,
@@ -424,14 +474,16 @@ export function useContent(id: string | null) {
  * 학습 대기열 전용 훅
  */
 export function useLearningQueue() {
-  const { queue, queueCount, startLearning, moveToQueue } = useContents({
-    status: 'queued',
-  });
+  const { queue, queueCount, startLearning, reorderQueue, removeFromQueue } =
+    useContents({
+      status: 'queued',
+    });
 
   return {
     queue,
     count: queueCount,
     startLearning,
-    removeFromQueue: moveToQueue, // NOTE: 실제로는 상태 변경이 필요할 수 있음
+    reorderQueue,
+    removeFromQueue,
   };
 }

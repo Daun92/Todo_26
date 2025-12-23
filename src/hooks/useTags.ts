@@ -17,7 +17,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
+import { db, deleteTagWithCascade } from '@/lib/db';
 import type { Tag } from '@/types';
 
 // ============================================
@@ -138,14 +138,15 @@ export function useTags(): UseTagsReturn {
   );
 
   /**
-   * 태그 삭제
+   * 태그 삭제 (연쇄 처리 포함)
+   * - 연관된 콘텐츠에서 태그 제거
+   * - 연관된 메모에서 태그 제거
+   * - 연관된 연결 삭제
    */
   const deleteTag = useCallback(async (id: string): Promise<void> => {
     try {
-      await db.tags.delete(id);
+      await deleteTagWithCascade(id);
       setError(null);
-
-      // TODO(CP-1.2): 연관된 콘텐츠/메모에서도 태그 제거 필요
     } catch (err) {
       setError(err as Error);
       throw err;

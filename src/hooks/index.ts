@@ -95,3 +95,5 @@ export {
   useAIInterview,
   type UseAIInterviewReturn,
 } from './useAIInterview';
+
+export { useAI, type UseAIReturn } from '@/lib/ai-service';
