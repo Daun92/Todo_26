@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Key, Check, AlertCircle, Trash2 } from 'lucide-react';
+import { Key, Check, AlertCircle, Trash2, Database } from 'lucide-react';
 import { Modal, Button, Input } from '@/components/ui';
+import { DataManagement } from '@/components/settings';
 import { saveApiKey, getApiKey, removeApiKey, hasApiKey } from '@/lib/gemini-live';
 import { cn } from '@/lib/utils';
 
@@ -190,10 +191,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </section>
 
+        {/* Data Management */}
+        <section>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <Database className="w-5 h-5 text-[var(--accent-magenta)]" />
+            데이터 관리
+          </h3>
+          <DataManagement />
+        </section>
+
         {/* About */}
         <section className="pt-4 border-t border-[rgba(255,255,255,0.1)]">
           <p className="text-xs text-[var(--text-muted)] text-center">
-            Mosaic v0.1.0 · AI Growth Partner
+            Mosaic v0.2.0 · AI Growth Partner
           </p>
         </section>
       </div>
